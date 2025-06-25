@@ -85,11 +85,11 @@
 }
 
 .add-book-button .ant-float-btn-body {
-  background-color: #00D4AA !important;
+  background-color: #fff !important;
 }
 
 .add-book-button .anticon {
-  color: #fff !important;
+  color: #00D4AA !important;
 }
 
 @media (min-width: 768px) {
