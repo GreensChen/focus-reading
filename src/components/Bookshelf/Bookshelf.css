@@ -25,7 +25,17 @@
 .header-left, .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-avatar {
+  background-color: #00D4AA;
+  cursor: pointer;
 }
 
 .header-left, .book-preview {
@@ -65,8 +75,21 @@
   flex-direction: column;
   gap: 16px;
   width: 100%;
-  margin: 0 auto;
+  margin: 0;
   padding-bottom: 60px;
+}
+
+.add-book-button {
+  right: 24px !important;
+  bottom: 24px !important;
+}
+
+.add-book-button .ant-float-btn-body {
+  background-color: #00D4AA !important;
+}
+
+.add-book-button .anticon {
+  color: #fff !important;
 }
 
 @media (min-width: 768px) {
@@ -194,7 +217,11 @@
 
 .book-author {
   font-size: 14px;
-  opacity: 0.8;
+  color: #999;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .book-reading-time {
@@ -207,11 +234,16 @@
 }
 
 .loading-container,
-.error-container {
+.err.loading-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 200px;
+  width: calc(100% - 32px);
+  max-width: 400px;
+  height: 120px;
+  margin: 0 auto;
+  background-color: #242424;
+  border-radius: 16px;
 }
 
 @media (hover: hover) {
