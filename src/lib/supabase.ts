@@ -48,6 +48,7 @@ export interface Book {
   cover_url: string | null;
   total_read_minutes: number;
   created_at: string;
+  gradient?: 'green' | 'blue' | 'orange' | 'purple';
   notes_count: number;
 }
 

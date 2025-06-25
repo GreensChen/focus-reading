@@ -1,12 +1,14 @@
 import React from 'react';
 import { Layout, Card, Avatar, Empty, Spin, FloatButton } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import './Bookshelf.css';
 import { useBooks } from '../../hooks/useBooks';
 
 const { Header, Content } = Layout;
 
 const Bookshelf: React.FC = () => {
+  const navigate = useNavigate();
   const { books, loading } = useBooks();
 
   if (loading) {
@@ -43,7 +45,12 @@ const Bookshelf: React.FC = () => {
             <Empty description="目前沒有書籍" />
           ) : (
             books?.map((book) => (
-              <Card key={book.id} className="book-card" variant="outlined">
+              <Card 
+                key={book.id} 
+                className="book-card" 
+                variant="outlined"
+                onClick={() => navigate(`/book/${book.id}`)}
+              >
                 <div className="book-preview">
                   <div className="book-cover-container">
                     {book.cover_url ? (

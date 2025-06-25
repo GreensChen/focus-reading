@@ -1,23 +1,26 @@
 import React from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { ConfigProvider } from 'antd';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Bookshelf from './components/Bookshelf/Bookshelf';
-import { ConfigProvider, theme } from 'antd';
+import ReadingPage from './components/ReadingPage/ReadingPage';
 
-function App() {
+const App: React.FC = () => {
   return (
     <ConfigProvider
       theme={{
-        algorithm: theme.darkAlgorithm,
         token: {
           colorPrimary: '#00D4AA',
         },
       }}
     >
-      <Router>
-        <Bookshelf />
-      </Router>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Bookshelf />} />
+          <Route path="/book/:bookId" element={<ReadingPage />} />
+        </Routes>
+      </BrowserRouter>
     </ConfigProvider>
   );
-}
+};
 
 export default App;
