@@ -1,8 +1,12 @@
 .bookshelf-layout {
   min-height: 100vh;
+  min-height: -webkit-fill-available;
   background-color: #1a1a1a;
   width: 100%;
-  margin: 0 auto;
+  margin: 0;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  display: flex;
+  flex-direction: column;
 }
 
 .header {
@@ -33,6 +37,9 @@
 
 .content {
   padding: 16px;
+  flex: 1;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .toolbar {
@@ -103,7 +110,8 @@
   cursor: pointer;
   transition: all 0.3s ease;
   overflow: hidden;
-  width: 400px;
+  width: calc(100% - 32px);
+  max-width: 400px;
   height: 120px;
   margin: 0 auto;
 }
