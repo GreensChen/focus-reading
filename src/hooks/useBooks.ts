@@ -19,12 +19,17 @@ export const useBooks = () => {
       console.log('Supabase response:', { data, error });
 
       if (error) throw error;
-      setBooks(data || []);
+      if (data) {
+        setBooks(data);
+      }
     } catch (err) {
       console.error('Error fetching books:', err);
       setError(err instanceof Error ? err.message : '發生錯誤');
     } finally {
-      setLoading(false);
+      // 設定固定的 loading 時間
+      setTimeout(() => {
+        setLoading(false);
+      }, 800);
     }
   };
 

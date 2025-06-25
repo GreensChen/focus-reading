@@ -1,5 +1,5 @@
 import React from 'react';
-import { Layout, Card, Avatar, Empty, Spin, FloatButton } from 'antd';
+import { Layout, Card, Avatar, Empty, FloatButton, Spin } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import './Bookshelf.css';
@@ -11,19 +11,7 @@ const Bookshelf: React.FC = () => {
   const navigate = useNavigate();
   const { books, loading } = useBooks();
 
-  if (loading) {
-    return (
-      <div className="error-container">
-        <Empty
-          description={
-            <span>
-              載入失敗
-            </span>
-          }
-        />
-      </div>
-    );
-  }
+
 
   return (
     <Layout className="bookshelf-layout">
