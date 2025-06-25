@@ -86,6 +86,8 @@
 
 .add-book-button .ant-float-btn-body {
   background-color: #fff !important;
+  width: 48px !important;
+  height: 48px !important;
 }
 
 .add-book-button .anticon {
