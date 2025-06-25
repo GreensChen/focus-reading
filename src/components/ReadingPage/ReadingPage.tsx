@@ -49,8 +49,16 @@ const ReadingPage: React.FC = () => {
           <Spin size="large" />
         ) : book ? (
           <>
-            <div className={`timer-circle gradient-${book.gradient || 'green'}`}>
-              <span className="timer-text">{book.total_read_minutes || 0}:00</span>
+            <div className="timer-display">
+              <div className="timer-title">累計閱讀時間</div>
+              <div className="time-text">{book.total_read_minutes || 0}:00</div>
+            </div>
+            <div className="book-cover">
+              {book.cover_url ? (
+                <img src={book.cover_url} alt={book.title} />
+              ) : (
+                <span className="book-cover-placeholder">📚</span>
+              )}
             </div>
             <div className="book-info">
               <h2 className="book-title">{book.title}</h2>
@@ -58,7 +66,6 @@ const ReadingPage: React.FC = () => {
               <p className="book-publisher">{book.publisher}</p>
             </div>
             <div className="time-selection">
-              <div className="time-selection-title">繼續閱讀</div>
               <div className="time-buttons">
                 {[15, 30, 45, 60].map((minutes, index) => (
                   <React.Fragment key={minutes}>
@@ -77,6 +84,7 @@ const ReadingPage: React.FC = () => {
                   </React.Fragment>
                 ))}
               </div>
+              <p className="time-selection-title">繼續閱讀</p>
             </div>
           </>
         ) : (
