@@ -27,7 +27,7 @@ const Bookshelf: React.FC = () => {
     <Layout className="bookshelf-layout">
       <Header className="header">
         <div className="header-left">
-          <h2>Focus Reading</h2>
+          <h2>Focus on Reading</h2>
         </div>
         <div className="header-right">
           <Avatar className="profile-avatar" size={32}>C</Avatar>
