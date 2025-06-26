@@ -1,6 +1,6 @@
 .notes-section {
   width: 100%;
-  padding: 12px 16px 80px;
+  padding: 12px 16px;
 }
 
 .notes-list {
@@ -17,6 +17,10 @@
 
 .note-container:not(:last-child) {
   margin-bottom: 24px;
+}
+
+.note-container:last-child {
+  margin-bottom: 80px;
 }
 
 .note-wrapper {
@@ -83,4 +87,42 @@
   height: 2px;
   background-color: rgba(255, 255, 255, 0.1);
   margin: 20px 16px;
+}
+
+/* 編輯筆記彈窗樣式 */
+.ant-modal-content {
+  background-color: #1a1a1a !important;
+  padding: 16px !important;
+  max-width: 375px;
+  margin: 0 auto;
+}
+
+.ant-modal-body {
+  padding: 0 !important;
+}
+
+.ant-modal-footer {
+  margin-top: 24px !important;
+  padding: 0 !important;
+  border-top: none !important;
+}
+
+.ant-modal .ant-input {
+  background-color: #1a1a1a !important;
+  border: 1px solid #242424 !important;
+  color: #ffffff !important;
+}
+
+.ant-modal .ant-input:focus,
+.ant-modal .ant-input:hover {
+  border-color: #242424 !important;
+  box-shadow: none !important;
+}
+
+.ant-modal .modal-cancel-button {
+  color: #ffffff !important;
+}
+
+.ant-modal .modal-save-button {
+  color: #00D4AA !important;
 }

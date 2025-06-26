@@ -9,17 +9,19 @@
   flex-direction: column;
 }
 
-.header {
+.ant-layout-header.header {
   position: sticky;
   top: 0;
   z-index: 100;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: transparent;
-  padding: 12px 16px;
+  background-color: #1a1a1a !important;
+  padding: 12px 16px !important;
   border-bottom: none;
   backdrop-filter: none;
+  height: auto !important;
+  line-height: normal !important;
 }
 
 .header-left, .header-right {
