@@ -1,26 +1,56 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Button, Spin, Card } from 'antd';
+import { Layout, Button, Spin } from 'antd';
 import { useParams, useNavigate } from 'react-router-dom';
 import { LeftOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import type { Database } from '../../lib/database.types';
-import dayjs from 'dayjs';
+
 import './ReadingPage.css';
+import '../../styles/note.css';
+
+interface Note {
+  id: string;
+  book_id: string;
+  content: string;
+  duration_min: number;
+  created_at: string;
+}
 
 const { Content } = Layout;
 
 const ReadingPage: React.FC = () => {
-  console.log('=== Reading Page Mounted ===');
   const navigate = useNavigate();
   const { bookId: rawBookId } = useParams<{ bookId: string }>();
-  // 使用從 URL 獲取的 bookId，如果沒有則使用一個測試 ID
   const bookId = rawBookId?.trim();
-  
-  console.log('Reading page rendered with:', {
-    rawBookId,
-    bookId,
-    isTestId: !rawBookId && bookId === '06e470b5-6348-4cc2-8cc5-c8f98725596b'
-  });
+  const [notes, setNotes] = useState<Note[]>([]);
+
+  useEffect(() => {
+    if (bookId) {
+      loadNotes();
+    }
+  }, [bookId]);
+
+  const loadNotes = async () => {
+    if (!bookId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .select('id, book_id, content, duration_min, created_at')
+        .eq('book_id', bookId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading notes:', error);
+        return;
+      }
+
+      setNotes(data || []);
+    } catch (error) {
+      console.error('Error in loadNotes:', error);
+    }
+  };
+
   const [book, setBook] = useState<Database['public']['Tables']['books']['Row'] | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,58 +72,11 @@ const ReadingPage: React.FC = () => {
     return data;
   };
 
-  const fetchNotes = async () => {
-    console.log('=== fetchNotes start ===');
-    console.log('Fetching notes with bookId:', bookId);
-    console.log('BookId type:', typeof bookId);
-    console.log('BookId length:', bookId?.length);
-    
-    try {
-      // 檢查 bookId 是否為有效的 UUID
-      if (!bookId || bookId.length !== 36) {
-        console.error('Invalid bookId:', bookId);
-        return [];
-      }
-
-      console.log('Starting Supabase query...');
-      // 先測試直接查詢
-      const testQuery = await supabase
-        .from('notes')
-        .select('count')
-        .eq('book_id', bookId);
-      
-      console.log('Test query result:', testQuery);
-
-      const { data, error } = await supabase
-        .from('notes')
-        .select('*')
-        .eq('book_id', bookId)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw new Error(`Error fetching notes: ${error.message}`);
-      }
-
-      console.log('Raw Supabase response:', { data, error });
-      console.log('Notes fetch result:', {
-        success: true,
-        count: data?.length || 0,
-        notes: data
-      });
-      console.log('=== fetchNotes end ===');
-
-      return data || [];
-    } catch (error) {
-      console.error('Exception fetching notes:', error);
-      throw error;
-    }
-  };
-
-  const [notes, setNotes] = useState<Database['public']['Tables']['notes']['Row'][]>([]);
-
   useEffect(() => {
     let mounted = true;
+
+    // 重置滾動位置到頂部
+    window.scrollTo(0, 0);
 
     const loadData = async () => {
       console.log('=== loadData start ===');
@@ -123,21 +106,8 @@ const ReadingPage: React.FC = () => {
         // 設置書籍信息
         setBook(bookResult);
 
-        // 然後獲取筆記
-        const notesResult = await fetchNotes();
-        console.log('Notes fetch completed:', notesResult);
-
-        if (!mounted) {
-          console.log('Component unmounted, stopping');
-          return;
-        }
-
-        console.log('Setting notes:', notesResult);
-        setNotes(notesResult);
-
         console.log('Data loaded successfully:', {
           book: bookResult,
-          notesCount: notesResult.length,
         });
       } catch (error) {
         console.error('Error loading data:', error);
@@ -166,7 +136,7 @@ const ReadingPage: React.FC = () => {
         className="back-button"
         onClick={() => navigate(-1)}
       />
-      <Content className="reading-content">
+      <Content className="timer-note-content">
         {loading ? (
           <Spin size="large" />
         ) : book ? (
@@ -204,52 +174,36 @@ const ReadingPage: React.FC = () => {
                   </React.Fragment>
                 ))}
               </div>
-              <p className="time-selection-title">繼續閱讀</p>
             </div>
-            <div className="notes-list">
-              {(() => {
-                console.log('=== Render Debug ===');
-                console.log('Component state:', {
-                  loading,
-                  bookId,
-                  notesLength: notes?.length,
-                  notes,
-                  book
-                });
-                return null;
-              })()} 
-              {loading ? (
-                <div style={{ color: 'rgba(255, 255, 255, 0.45)', textAlign: 'center', padding: '20px' }}>
-                  載入中...
-                </div>
-              ) : notes && notes.length > 0 ? (
-                <>
+            <div className="note-button-container">
+              <div className="note-divider" />
+              <div className="notes-section">
+                {notes.length === 0 ? (
                   <div style={{ color: 'rgba(255, 255, 255, 0.65)', marginBottom: '16px' }}>
-                    共 {notes.length} 條筆記
+                    0 條筆記
                   </div>
-                  {notes.map((note) => {
-                    console.log('Rendering note:', {
-                      id: note.id,
-                      book_id: note.book_id,
-                      content: note.content,
-                      created_at: note.created_at
-                    });
-                    return (
-                      <Card key={note.id} className="note-card">
-                        <div className="note-content">{note.content}</div>
-                        <div className="note-time">
-                          {dayjs(note.created_at).format('YYYY/MM/DD HH:mm')}
+                ) : (
+                  <div className="notes-list">
+                    {notes.map(note => (
+                      <div key={note.id} className="note-wrapper">
+                        <div className="note-item">
+                          <div className="note-content">{note.content}</div>
                         </div>
-                      </Card>
-                    );
-                  })}
-                </>
-              ) : (
-                <div style={{ color: 'rgba(255, 255, 255, 0.45)', textAlign: 'center', padding: '20px' }}>
-                  0 條筆記
-                  {(() => { console.log('No notes found for bookId:', bookId); return null; })()} 
-                </div>
-              )}
+                        <div className="note-time">
+                          {new Date(note.created_at).toLocaleString('zh-TW', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: false
+                          }).replace(/\//g, '.').replace(' ', ' ')}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </>
         ) : (

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Button, Input } from 'antd';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PlayCircleOutlined, PauseCircleOutlined, RedoOutlined, LeftOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { PlayCircleOutlined, PauseCircleOutlined, RedoOutlined, LeftOutlined, CheckCircleOutlined, SendOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import './TimerNotePage.css';
+import '../../styles/note.css';
 
 const { Content } = Layout;
 const { TextArea } = Input;
@@ -14,6 +15,38 @@ const TimerNotePage: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState(parseInt(initialMinutes || '0') * 60);
   const [isRunning, setIsRunning] = useState(true);
   const [noteContent, setNoteContent] = useState('');
+const [notes, setNotes] = useState<{ id: string; book_id: string; content: string; duration_min: number; created_at: string }[]>([]);
+
+useEffect(() => {
+  // 重置滾動位置到頂部
+  window.scrollTo(0, 0);
+
+  if (bookId) {
+    loadNotes();
+  }
+}, [bookId]);
+
+  const loadNotes = async () => {
+    if (!bookId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('notes')
+        .select('id, book_id, content, duration_min, created_at')
+        .eq('book_id', bookId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading notes:', error);
+        return;
+      }
+
+      setNotes(data || []);
+    } catch (error) {
+      console.error('Error in loadNotes:', error);
+    }
+  };
+
   const [bookTitle, setBookTitle] = useState('');
   const [startTime] = useState(Date.now());
   const [totalPausedTime, setTotalPausedTime] = useState(0);
@@ -81,34 +114,30 @@ const TimerNotePage: React.FC = () => {
   };
 
   const handleSaveNote = async () => {
-    if (!bookId) return;
+    if (!bookId || !noteContent.trim()) return;
 
     try {
-      // 計算實際閱讀時間（總時間減去暫停時間）
       const endTime = Date.now();
       const totalTime = endTime - startTime;
       const finalPausedTime = pauseStartTime ? totalPausedTime + (endTime - pauseStartTime) : totalPausedTime;
       const actualReadingTimeSeconds = Math.floor((totalTime - finalPausedTime) / 1000);
+      const readingMinutes = Math.floor(actualReadingTimeSeconds / 60);
 
-      console.log('Time calculation:', {
-        totalTime: Math.floor(totalTime / 1000),
-        finalPausedTime: Math.floor(finalPausedTime / 1000),
-        actualReadingTimeSeconds
-      });
+      const { data, error } = await supabase
+        .from('notes')
+        .insert({
+          book_id: bookId,
+          content: noteContent.trim(),
+          duration_min: readingMinutes
+        })
+        .select('id, book_id, content, duration_min, created_at')
+        .single();
 
-      // 只有當有筆記內容時才儲存筆記
-      if (noteContent.trim()) {
-        const { error } = await supabase
-          .from('notes')
-          .insert([{
-            book_id: bookId,
-            content: noteContent.trim(),
-            duration_min: Math.floor(actualReadingTimeSeconds / 60)
-          }]);
-
-        if (error) {
-          console.error('Error saving note:', error);
-        }
+      if (error) {
+        console.error('Error saving note:', error);
+      } else if (data) {
+        setNotes(prevNotes => [data, ...prevNotes]);
+        setNoteContent('');
       }
 
       // 先獲取當前的閱讀時間
@@ -138,13 +167,9 @@ const TimerNotePage: React.FC = () => {
 
       if (updateError) {
         console.error('Error updating reading time:', updateError);
-        return;
       }
     } catch (error) {
       console.error('Error in handleSaveNote:', error);
-    } finally {
-      // 無論是否有錯誤，都返回閱讀頁
-      navigate(`/book/${bookId}`);
     }
   };
 
@@ -192,16 +217,47 @@ const TimerNotePage: React.FC = () => {
             placeholder="寫下你的閱讀筆記..."
             value={noteContent}
             onChange={e => setNoteContent(e.target.value)}
-            autoSize={{ minRows: 4, maxRows: 8 }}
+            autoSize={{ minRows: 6, maxRows: 10 }}
+            className="note-textarea"
           />
-          <Button 
-            type="primary" 
-            onClick={handleSaveNote}
-            disabled={!noteContent.trim()}
-            className="save-button"
-          >
-            儲存筆記
-          </Button>
+          <div className="note-button-container">
+            <Button
+              type="primary"
+              shape="circle"
+              icon={<SendOutlined />}
+              className="send-note-button"
+              onClick={handleSaveNote}
+              disabled={!noteContent.trim()}
+            />
+            <div className="note-divider" />
+            <div className="notes-section">
+              {notes.length === 0 ? (
+                <div style={{ color: 'rgba(255, 255, 255, 0.65)', marginBottom: '16px' }}>
+                  0 條筆記
+                </div>
+              ) : (
+                <div className="notes-list">
+                {notes.map(note => (
+                  <div key={note.id} className="note-wrapper">
+                    <div className="note-item">
+                      <div className="note-content">{note.content}</div>
+                    </div>
+                    <div className="note-time">
+                      {new Date(note.created_at).toLocaleString('zh-TW', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                      }).replace(/\//g, '.').replace(' ', ' ')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              )}
+            </div>
+          </div>
         </div>
       </Content>
     </Layout>
