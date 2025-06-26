@@ -18,6 +18,17 @@
   display: flex;
   align-items: flex-start;
   width: 100%;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.note-item:active {
+  background-color: rgba(0, 255, 173, 0.1);
+  cursor: pointer;
+}
+
+.note-item:focus {
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .note-content {

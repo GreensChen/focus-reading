@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Button, Input } from 'antd';
+import { Layout, Button, Input, Modal } from 'antd';
+import { EditOutlined, DeleteOutlined, CloseOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PlayCircleOutlined, PauseCircleOutlined, RedoOutlined, LeftOutlined, CheckCircleOutlined, SendOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
@@ -9,7 +10,76 @@ import '../../styles/note.css';
 const { Content } = Layout;
 const { TextArea } = Input;
 
+interface ActionModalProps {
+  visible: boolean;
+  _note: { id: string; content: string; created_at: string; } | null;
+  onEdit: () => void;
+  onDelete: () => void;
+  onCancel: () => void;
+}
+
+const ActionModal: React.FC<ActionModalProps> = ({ visible, _note, onEdit, onDelete, onCancel }) => (
+  <Modal
+    open={visible}
+    footer={null}
+    onCancel={onCancel}
+    centered
+    closable={false}
+    width={200}
+    modalRender={(_modal) => (
+      <div style={{
+        backgroundColor: '#141414',
+        padding: '12px',
+        borderRadius: '8px',
+        border: '1px solid rgba(255, 255, 255, 0.05)'
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <Button 
+            type="text"
+            icon={<EditOutlined />} 
+            onClick={onEdit}
+            style={{ height: '40px', color: '#fff', textAlign: 'left', padding: '8px' }}
+          >
+            編輯
+          </Button>
+          <Button 
+            type="text"
+            icon={<DeleteOutlined />} 
+            onClick={onDelete}
+            danger
+            style={{ height: '40px', textAlign: 'left', padding: '8px' }}
+          >
+            刪除
+          </Button>
+          <Button 
+            type="text"
+            icon={<CloseOutlined />} 
+            onClick={onCancel}
+            style={{ height: '40px', color: '#fff', textAlign: 'left', padding: '8px' }}
+          >
+            取消
+          </Button>
+        </div>
+      </div>
+    )}
+    styles={{
+      mask: {
+        backgroundColor: 'rgba(0, 0, 0, 0.45)'
+      },
+      content: {
+        boxShadow: 'none',
+        backgroundColor: 'transparent'
+      }
+    }}
+  />
+);
+
 const TimerNotePage: React.FC = () => {
+  const [selectedNote, setSelectedNote] = useState<{ id: string; content: string; created_at: string; } | null>(null);
+  const [isActionModalVisible, setIsActionModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [editedContent, setEditedContent] = useState('');
   const navigate = useNavigate();
   const { bookId, minutes: initialMinutes } = useParams<{ bookId: string; minutes: string }>();
   const [timeLeft, setTimeLeft] = useState(parseInt(initialMinutes || '0') * 60);
@@ -25,6 +95,66 @@ useEffect(() => {
     loadNotes();
   }
 }, [bookId]);
+
+  const handleNoteClick = (note: { id: string; content: string; created_at: string; }) => {
+    setSelectedNote(note);
+    setIsActionModalVisible(true);
+  };
+
+  const handleEdit = () => {
+    setIsActionModalVisible(false);
+    setEditedContent(selectedNote?.content || '');
+    setIsEditModalVisible(true);
+  };
+
+  const handleDelete = () => {
+    setIsActionModalVisible(false);
+    setIsDeleteModalVisible(true);
+  };
+
+  const handleEditConfirm = async () => {
+    if (!selectedNote || !editedContent.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .update({ content: editedContent.trim() })
+        .eq('id', selectedNote.id);
+
+      if (error) {
+        console.error('Error updating note:', error);
+        return;
+      }
+
+      loadNotes();
+      setIsEditModalVisible(false);
+      setSelectedNote(null);
+    } catch (error) {
+      console.error('Error in handleEditConfirm:', error);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedNote) return;
+
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', selectedNote.id);
+
+      if (error) {
+        console.error('Error deleting note:', error);
+        return;
+      }
+
+      loadNotes();
+      setIsDeleteModalVisible(false);
+      setSelectedNote(null);
+    } catch (error) {
+      console.error('Error in handleDeleteConfirm:', error);
+    }
+  };
 
   const loadNotes = async () => {
     if (!bookId) return;
@@ -117,18 +247,12 @@ useEffect(() => {
     if (!bookId || !noteContent.trim()) return;
 
     try {
-      const endTime = Date.now();
-      const totalTime = endTime - startTime;
-      const finalPausedTime = pauseStartTime ? totalPausedTime + (endTime - pauseStartTime) : totalPausedTime;
-      const actualReadingTimeSeconds = Math.floor((totalTime - finalPausedTime) / 1000);
-      const readingMinutes = Math.floor(actualReadingTimeSeconds / 60);
-
       const { data, error } = await supabase
         .from('notes')
         .insert({
           book_id: bookId,
           content: noteContent.trim(),
-          duration_min: readingMinutes
+          duration_min: 0 // 發送筆記時不計入閱讀時間
         })
         .select('id, book_id, content, duration_min, created_at')
         .single();
@@ -139,6 +263,27 @@ useEffect(() => {
         setNotes(prevNotes => [data, ...prevNotes]);
         setNoteContent('');
       }
+    } catch (error) {
+      console.error('Error in handleSaveNote:', error);
+    }
+  };
+
+  const handleComplete = async () => {
+    if (!bookId) return;
+
+    // 停止計時器
+    setIsRunning(false);
+
+    try {
+      const endTime = Date.now();
+      const totalTime = endTime - startTime;
+      // 計算最終暫停時間
+      let finalPausedTime = totalPausedTime;
+      if (pauseStartTime) {
+        finalPausedTime += (endTime - pauseStartTime);
+      }
+      
+      const actualReadingTimeSeconds = Math.floor((totalTime - finalPausedTime) / 1000);
 
       // 先獲取當前的閱讀時間
       const { data: currentBook, error: fetchError } = await supabase
@@ -169,7 +314,10 @@ useEffect(() => {
         console.error('Error updating reading time:', updateError);
       }
     } catch (error) {
-      console.error('Error in handleSaveNote:', error);
+      console.error('Error in handleComplete:', error);
+    } finally {
+      // 無論是否有錯誤，都導航回閱讀頁面
+      navigate(`/book/${bookId}`);
     }
   };
 
@@ -206,7 +354,7 @@ useEffect(() => {
           <div className="timer-divider" />
           <Button
             className="timer-control-button"
-            onClick={handleSaveNote}
+            onClick={handleComplete}
           >
             <CheckCircleOutlined />
             <span className="timer-button-text">完成</span>
@@ -237,25 +385,72 @@ useEffect(() => {
                 </div>
               ) : (
                 <div className="notes-list">
-                {notes.map(note => (
-                  <div key={note.id} className="note-wrapper">
-                    <div className="note-item">
-                      <div className="note-content">{note.content}</div>
+                  {notes.map(note => (
+                    <div key={note.id} className="note-wrapper">
+                      <div className="note-item" onClick={() => handleNoteClick(note)}>
+                        <div className="note-content">{note.content}</div>
+                      </div>
+                      <div className="note-time">
+                        {new Date(note.created_at).toLocaleString('zh-TW', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: false
+                        }).replace(/\//g, '.').replace(' ', ' ')}
+                      </div>
                     </div>
-                    <div className="note-time">
-                      {new Date(note.created_at).toLocaleString('zh-TW', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false
-                      }).replace(/\//g, '.').replace(' ', ' ')}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
               )}
+
+              <ActionModal
+                visible={isActionModalVisible}
+                _note={selectedNote}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onCancel={() => {
+                  setIsActionModalVisible(false);
+                  setSelectedNote(null);
+                }}
+              />
+
+              <Modal
+                title="編輯筆記"
+                open={isEditModalVisible}
+                onOk={handleEditConfirm}
+                onCancel={() => {
+                  setIsEditModalVisible(false);
+                  setSelectedNote(null);
+                }}
+                okText="確認"
+                cancelText="取消"
+                centered
+              >
+                <TextArea
+                  value={editedContent}
+                  onChange={e => setEditedContent(e.target.value)}
+                  placeholder="請輸入筆記內容"
+                  autoSize={{ minRows: 3, maxRows: 6 }}
+                />
+              </Modal>
+
+              <Modal
+                title="刪除筆記"
+                open={isDeleteModalVisible}
+                onOk={handleDeleteConfirm}
+                onCancel={() => {
+                  setIsDeleteModalVisible(false);
+                  setSelectedNote(null);
+                }}
+                okText="刪除"
+                cancelText="取消"
+                centered
+                okButtonProps={{ danger: true }}
+              >
+                <p>確定要刪除這條筆記嗎？此操作無法復原。</p>
+              </Modal>
             </div>
           </div>
         </div>

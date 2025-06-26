@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Button, Spin } from 'antd';
+import { Layout, Button, Spin, Modal, Input } from 'antd';
+import { EditOutlined, DeleteOutlined, CloseOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import { LeftOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
@@ -16,9 +17,79 @@ interface Note {
   created_at: string;
 }
 
+interface ActionModalProps {
+  visible: boolean;
+  _note: Note | null;
+  onEdit: () => void;
+  onDelete: () => void;
+  onCancel: () => void;
+}
+
+const ActionModal: React.FC<ActionModalProps> = ({ visible, _note, onEdit, onDelete, onCancel }) => (
+  <Modal
+    open={visible}
+    footer={null}
+    onCancel={onCancel}
+    centered
+    closable={false}
+    width={200}
+    modalRender={(_modal) => (
+      <div style={{
+        backgroundColor: '#141414',
+        padding: '12px',
+        borderRadius: '8px',
+        border: '1px solid rgba(255, 255, 255, 0.05)'
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <Button 
+            type="text"
+            icon={<EditOutlined />} 
+            onClick={onEdit}
+            style={{ height: '40px', color: '#fff', textAlign: 'left', padding: '8px' }}
+          >
+            編輯
+          </Button>
+          <Button 
+            type="text"
+            icon={<DeleteOutlined />} 
+            onClick={onDelete}
+            danger
+            style={{ height: '40px', textAlign: 'left', padding: '8px' }}
+          >
+            刪除
+          </Button>
+          <Button 
+            type="text"
+            icon={<CloseOutlined />} 
+            onClick={onCancel}
+            style={{ height: '40px', color: '#fff', textAlign: 'left', padding: '8px' }}
+          >
+            取消
+          </Button>
+        </div>
+      </div>
+    )}
+    styles={{
+      mask: {
+        backgroundColor: 'rgba(0, 0, 0, 0.45)'
+      },
+      content: {
+        boxShadow: 'none',
+        backgroundColor: 'transparent'
+      }
+    }}
+  />
+);
+
 const { Content } = Layout;
+const { TextArea } = Input;
 
 const ReadingPage: React.FC = () => {
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [isActionModalVisible, setIsActionModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+  const [editedContent, setEditedContent] = useState('');
   const navigate = useNavigate();
   const { bookId: rawBookId } = useParams<{ bookId: string }>();
   const bookId = rawBookId?.trim();
@@ -29,6 +100,66 @@ const ReadingPage: React.FC = () => {
       loadNotes();
     }
   }, [bookId]);
+
+  const handleNoteClick = (note: Note) => {
+    setSelectedNote(note);
+    setIsActionModalVisible(true);
+  };
+
+  const handleEdit = () => {
+    setIsActionModalVisible(false);
+    setEditedContent(selectedNote?.content || '');
+    setIsEditModalVisible(true);
+  };
+
+  const handleDelete = () => {
+    setIsActionModalVisible(false);
+    setIsDeleteModalVisible(true);
+  };
+
+  const handleEditConfirm = async () => {
+    if (!selectedNote || !editedContent.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .update({ content: editedContent.trim() })
+        .eq('id', selectedNote.id);
+
+      if (error) {
+        console.error('Error updating note:', error);
+        return;
+      }
+
+      loadNotes();
+      setIsEditModalVisible(false);
+      setSelectedNote(null);
+    } catch (error) {
+      console.error('Error in handleEditConfirm:', error);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedNote) return;
+
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', selectedNote.id);
+
+      if (error) {
+        console.error('Error deleting note:', error);
+        return;
+      }
+
+      loadNotes();
+      setIsDeleteModalVisible(false);
+      setSelectedNote(null);
+    } catch (error) {
+      console.error('Error in handleDeleteConfirm:', error);
+    }
+  };
 
   const loadNotes = async () => {
     if (!bookId) return;
@@ -186,7 +317,7 @@ const ReadingPage: React.FC = () => {
                   <div className="notes-list">
                     {notes.map(note => (
                       <div key={note.id} className="note-wrapper">
-                        <div className="note-item">
+                        <div className="note-item" onClick={() => handleNoteClick(note)}>
                           <div className="note-content">{note.content}</div>
                         </div>
                         <div className="note-time">
@@ -201,6 +332,53 @@ const ReadingPage: React.FC = () => {
                         </div>
                       </div>
                     ))}
+
+                    <ActionModal
+                      visible={isActionModalVisible}
+                      _note={selectedNote}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onCancel={() => {
+                        setIsActionModalVisible(false);
+                        setSelectedNote(null);
+                      }}
+                    />
+
+                    <Modal
+                      title="編輯筆記"
+                      open={isEditModalVisible}
+                      onOk={handleEditConfirm}
+                      onCancel={() => {
+                        setIsEditModalVisible(false);
+                        setSelectedNote(null);
+                      }}
+                      okText="確認"
+                      cancelText="取消"
+                      centered
+                    >
+                      <TextArea
+                        value={editedContent}
+                        onChange={e => setEditedContent(e.target.value)}
+                        placeholder="請輸入筆記內容"
+                        autoSize={{ minRows: 3, maxRows: 6 }}
+                      />
+                    </Modal>
+
+                    <Modal
+                      title="刪除筆記"
+                      open={isDeleteModalVisible}
+                      onOk={handleDeleteConfirm}
+                      onCancel={() => {
+                        setIsDeleteModalVisible(false);
+                        setSelectedNote(null);
+                      }}
+                      okText="刪除"
+                      cancelText="取消"
+                      centered
+                      okButtonProps={{ danger: true }}
+                    >
+                      <p>確定要刪除這條筆記嗎？此操作無法復原。</p>
+                    </Modal>
                   </div>
                 )}
               </div>
