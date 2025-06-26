@@ -10,7 +10,7 @@ const { Content } = Layout;
 const { TextArea } = Input;
 
 const TimerNotePage: React.FC = () => {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const { bookId, minutes: initialMinutes } = useParams<{ bookId: string; minutes: string }>();
   const [timeLeft, setTimeLeft] = useState(parseInt(initialMinutes || '0') * 60);
   const [isRunning, setIsRunning] = useState(true);
@@ -117,18 +117,12 @@ useEffect(() => {
     if (!bookId || !noteContent.trim()) return;
 
     try {
-      const endTime = Date.now();
-      const totalTime = endTime - startTime;
-      const finalPausedTime = pauseStartTime ? totalPausedTime + (endTime - pauseStartTime) : totalPausedTime;
-      const actualReadingTimeSeconds = Math.floor((totalTime - finalPausedTime) / 1000);
-      const readingMinutes = Math.floor(actualReadingTimeSeconds / 60);
-
       const { data, error } = await supabase
         .from('notes')
         .insert({
           book_id: bookId,
           content: noteContent.trim(),
-          duration_min: readingMinutes
+          duration_min: 0
         })
         .select('id, book_id, content, duration_min, created_at')
         .single();
@@ -139,8 +133,26 @@ useEffect(() => {
         setNotes(prevNotes => [data, ...prevNotes]);
         setNoteContent('');
       }
+    } catch (error) {
+      console.error('Error in handleSaveNote:', error);
+    }
+  };
 
-      // 先獲取當前的閱讀時間
+  const handleComplete = async () => {
+    if (!bookId) return;
+
+    setIsRunning(false);
+
+    try {
+      const endTime = Date.now();
+      const totalTime = endTime - startTime;
+      let finalPausedTime = totalPausedTime;
+      if (pauseStartTime) {
+        finalPausedTime += (endTime - pauseStartTime);
+      }
+
+      const actualReadingTimeSeconds = Math.floor((totalTime - finalPausedTime) / 1000);
+
       const { data: currentBook, error: fetchError } = await supabase
         .from('books')
         .select('total_read_time')
@@ -153,13 +165,7 @@ useEffect(() => {
       }
 
       const newTotalTime = (currentBook?.total_read_time || 0) + actualReadingTimeSeconds;
-      console.log('Updating total time:', {
-        currentTime: currentBook?.total_read_time || 0,
-        actualReadingTimeSeconds,
-        newTotalTime
-      });
 
-      // 更新書籍的閱讀時間
       const { error: updateError } = await supabase
         .from('books')
         .update({ total_read_time: newTotalTime })
@@ -168,8 +174,10 @@ useEffect(() => {
       if (updateError) {
         console.error('Error updating reading time:', updateError);
       }
+
+      _navigate(`/book/${bookId}`);
     } catch (error) {
-      console.error('Error in handleSaveNote:', error);
+      console.error('Error in handleComplete:', error);
     }
   };
 
@@ -179,7 +187,7 @@ useEffect(() => {
         className="back-button"
         type="text"
         icon={<LeftOutlined />}
-        onClick={() => navigate(-1)}      />
+        onClick={() => _navigate(-1)}      />
       <Content className="timer-note-content">
         <div className="timer-display">
           <div className="timer-title">{bookTitle}</div>
@@ -206,7 +214,7 @@ useEffect(() => {
           <div className="timer-divider" />
           <Button
             className="timer-control-button"
-            onClick={handleSaveNote}
+            onClick={handleComplete}
           >
             <CheckCircleOutlined />
             <span className="timer-button-text">完成</span>

@@ -19,7 +19,7 @@ interface Note {
 const { Content } = Layout;
 
 const ReadingPage: React.FC = () => {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const { bookId: rawBookId } = useParams<{ bookId: string }>();
   const bookId = rawBookId?.trim();
   const [notes, setNotes] = useState<Note[]>([]);
@@ -134,7 +134,7 @@ const ReadingPage: React.FC = () => {
         type="text" 
         icon={<LeftOutlined />} 
         className="back-button"
-        onClick={() => navigate(-1)}
+        onClick={() => _navigate('/')}
       />
       <Content className="timer-note-content">
         {loading ? (
@@ -166,7 +166,7 @@ const ReadingPage: React.FC = () => {
                     {index > 0 && <div className="time-divider" />}
                     <Button
                       className="time-select-button"
-                      onClick={() => navigate(`/timer/${bookId}/${minutes}`)}
+                      onClick={() => _navigate(`/timer/${bookId}/${minutes}`)}
                     >
                       <span className="time-number">{minutes}</span>
                       <span className="time-unit">min</span>
@@ -179,8 +179,13 @@ const ReadingPage: React.FC = () => {
               <div className="note-divider" />
               <div className="notes-section">
                 {notes.length === 0 ? (
-                  <div style={{ color: 'rgba(255, 255, 255, 0.65)', marginBottom: '16px' }}>
-                    0 條筆記
+                  <div style={{ 
+                    color: 'rgba(255, 255, 255, 0.65)', 
+                    marginBottom: '16px',
+                    textAlign: 'center',
+                    width: '100%'
+                  }}>
+                    沒有筆記
                   </div>
                 ) : (
                   <div className="notes-list">

@@ -88,8 +88,6 @@
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
-  transition: all 0.3s ease !important;
-  gap: 8px !important;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
@@ -123,16 +121,6 @@
 
 .timer-control-button:active .timer-button-text {
   color: rgba(0, 212, 170, 0.65);
-}
-
-@media (hover: none) {
-  .timer-control-button:active {
-    background-color: transparent !important;
-  }
-  
-  .timer-control-button:active::after {
-    opacity: 0;
-  }
 }
 
 .note-section {
