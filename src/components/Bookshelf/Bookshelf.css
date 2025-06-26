@@ -17,7 +17,7 @@
   justify-content: space-between;
   align-items: center;
   background-color: #1a1a1a !important;
-  padding: 12px 16px !important;
+  padding: 14px 16px !important;
   border-bottom: none;
   backdrop-filter: none;
   height: auto !important;
@@ -49,14 +49,15 @@
 }
 
 .content {
-  padding: 84px 16px 16px;
+  padding: 0 16px;
   flex: 1;
   width: 100%;
   overflow-x: hidden;
+  margin-top: 24px;
 }
 
 .toolbar {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .search-input {
