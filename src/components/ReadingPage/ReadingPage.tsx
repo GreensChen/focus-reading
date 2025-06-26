@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Button, Spin } from 'antd';
+import { Layout, Spin, Button } from 'antd';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { LeftOutlined } from '@ant-design/icons';
+import Header from '../Header/Header';
 import { supabase } from '../../supabaseClient';
 import type { Database } from '../../lib/database.types';
 import Note from '../Note/Note';
@@ -20,26 +20,13 @@ interface Note {
 const { Content } = Layout;
 
 const ReadingPage: React.FC = () => {
-  const [bookTitle, setBookTitle] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const { bookId: rawBookId } = useParams<{ bookId: string }>();
   const bookId = rawBookId?.trim();
   const [notes, setNotes] = useState<Note[]>([]);
 
-  const fetchBookInfo = async () => {
-    if (bookId) {
-      const { data } = await supabase
-        .from('books')
-        .select('title')
-        .eq('id', bookId)
-        .single();
 
-      if (data) {
-        setBookTitle(data.title);
-      }
-    }
-  };
 
 
 
@@ -104,7 +91,6 @@ const ReadingPage: React.FC = () => {
 
         setBook(bookResult);
         await loadNotes();
-        await fetchBookInfo();
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -124,23 +110,17 @@ const ReadingPage: React.FC = () => {
   return (
     <Layout className="reading-page">
       <Content className="reading-page-content">
-        <div className="header">
-          <Button
-            type="text"
-            icon={<LeftOutlined />}
-            onClick={() => {
-              const fromTimer = location.state && (location.state as { from: string }).from === 'timer';
-              if (fromTimer) {
-                navigate('/');
-              } else {
-                navigate(-1);
-              }
-            }}
-            className="back-button"
-          />
-          <div className="book-title">{bookTitle}</div>
-        </div>
-        <div className="timer-note-content">
+        <Header
+          onBack={() => {
+            const fromTimer = location.state && (location.state as { from: string }).from === 'timer';
+            if (fromTimer) {
+              navigate('/');
+            } else {
+              navigate(-1);
+            }
+          }}
+        />
+        <div className="reading-page-content">
           {loading ? (
             <Spin size="large" />
           ) : book ? (
@@ -197,14 +177,33 @@ const ReadingPage: React.FC = () => {
                         <Note
                           key={note.id}
                           content={note.content}
-                          timestamp={new Date(note.created_at).toLocaleString('zh-TW', {
-                            year: 'numeric',
-                            month: '2-digit',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            hour12: false
-                          }).replace(/\//g, '.')}
+                          createdAt={note.created_at}
+                          onEdit={async (content) => {
+                            try {
+                              const { error } = await supabase
+                                .from('notes')
+                                .update({ content })
+                                .eq('id', note.id);
+                              
+                              if (error) throw error;
+                              await loadNotes();
+                            } catch (error) {
+                              console.error('Error updating note:', error);
+                            }
+                          }}
+                          onDelete={async () => {
+                            try {
+                              const { error } = await supabase
+                                .from('notes')
+                                .delete()
+                                .eq('id', note.id);
+                              
+                              if (error) throw error;
+                              await loadNotes();
+                            } catch (error) {
+                              console.error('Error deleting note:', error);
+                            }
+                          }}
                         />
                       ))}
                     </div>

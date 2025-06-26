@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Button, Input } from 'antd';
-
 import { useParams, useNavigate } from 'react-router-dom';
-import { PlayCircleOutlined, PauseCircleOutlined, RedoOutlined, LeftOutlined, CheckCircleOutlined, SendOutlined } from '@ant-design/icons';
+import { PlayCircleOutlined, PauseCircleOutlined, RedoOutlined, CheckCircleOutlined, SendOutlined } from '@ant-design/icons';
+import Header from '../Header/Header';
 import { supabase } from '../../supabaseClient';
 import Note from '../Note/Note';
 import './TimerNotePage.css';
@@ -207,12 +207,7 @@ const TimerNotePage: React.FC = () => {
 
   return (
     <Layout className="timer-note-page">
-      <Button
-        className="back-button"
-        type="text"
-        icon={<LeftOutlined />}
-        onClick={() => _navigate(`/book/${bookId}`, { state: { from: 'timer' } })}
-      />
+      <Header onBack={() => _navigate(`/book/${bookId}`, { state: { from: 'timer' } })} />
       <Content className="timer-note-content">
         <div className="timer-display">
           <div className="timer-title">{bookTitle}</div>
@@ -274,14 +269,33 @@ const TimerNotePage: React.FC = () => {
                     <Note
                       key={note.id}
                       content={note.content}
-                      timestamp={new Date(note.created_at).toLocaleString('zh-TW', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false
-                      }).replace(/\//g, '.')}
+                      createdAt={note.created_at}
+                      onEdit={async (content) => {
+                        try {
+                          const { error } = await supabase
+                            .from('notes')
+                            .update({ content })
+                            .eq('id', note.id);
+                          
+                          if (error) throw error;
+                          await loadNotes();
+                        } catch (error) {
+                          console.error('Error updating note:', error);
+                        }
+                      }}
+                      onDelete={async () => {
+                        try {
+                          const { error } = await supabase
+                            .from('notes')
+                            .delete()
+                            .eq('id', note.id);
+                          
+                          if (error) throw error;
+                          await loadNotes();
+                        } catch (error) {
+                          console.error('Error deleting note:', error);
+                        }
+                      }}
                     />
                   ))}
                 </div>

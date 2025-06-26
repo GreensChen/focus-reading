@@ -32,6 +32,29 @@
   margin-bottom: 1px;
 }
 
+.note-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.note-action-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.note-action-buttons .ant-btn {
+  color: rgba(255, 255, 255, 0.45);
+  padding: 4px;
+  height: auto;
+  min-width: auto;
+}
+
+.note-action-buttons .ant-btn:hover {
+  color: #00D4AA;
+  background: transparent;
+}
+
 .note-time {
   color: rgba(255, 255, 255, 0.45);
   font-size: 12px;

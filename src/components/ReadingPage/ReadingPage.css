@@ -4,19 +4,29 @@
   position: relative;
 }
 
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  z-index: 1;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  background-color: #1a1a1a;
+}
+
 .back-button {
-  position: absolute;
-  top: 16px;
-  left: 16px;
   color: #fff !important;
   font-size: 20px;
 }
 
-.reading-content {
+.reading-page-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 60px 16px 24px;
+  padding: 48px 16px 24px;
   max-width: 375px;
   margin: 0 auto;
   width: 100%;
