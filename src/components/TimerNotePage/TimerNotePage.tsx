@@ -33,9 +33,6 @@ const TimerNotePage: React.FC = () => {
   const [_timer, _setTimer] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // 重置滾動位置到頂部
-    window.scrollTo(0, 0);
-
     if (bookId) {
       loadNotes();
     }
