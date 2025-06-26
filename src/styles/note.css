@@ -18,6 +18,43 @@
   display: flex;
   align-items: flex-start;
   width: 100%;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.note-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.note-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+}
+
+.note-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.note-wrapper.active .note-actions {
+  opacity: 1;
+}
+
+.note-time-wrapper {
+  margin-left: auto;
+}
+
+.note-info .ant-btn {
+  font-size: 18px;
+}
+
+.note-info .ant-btn .anticon {
+  font-size: 18px;
 }
 
 .note-content {
@@ -32,8 +69,6 @@
 .note-time {
   color: rgba(255, 255, 255, 0.45);
   font-size: 12px;
-  text-align: right;
-  padding-right: 4px;
 }
 
 .notes-list {

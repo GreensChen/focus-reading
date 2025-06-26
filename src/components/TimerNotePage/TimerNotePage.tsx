@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Button, Input } from 'antd';
+import { Layout, Button, Input, Modal, message } from 'antd';
 import { useParams, useNavigate } from 'react-router-dom';
-import { PlayCircleOutlined, PauseCircleOutlined, RedoOutlined, LeftOutlined, CheckCircleOutlined, SendOutlined } from '@ant-design/icons';
+import { PlayCircleOutlined, PauseCircleOutlined, RedoOutlined, LeftOutlined, CheckCircleOutlined, SendOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import './TimerNotePage.css';
 import '../../styles/note.css';
@@ -15,9 +15,15 @@ const TimerNotePage: React.FC = () => {
   const [timeLeft, setTimeLeft] = useState(parseInt(initialMinutes || '0') * 60);
   const [isRunning, setIsRunning] = useState(true);
   const [noteContent, setNoteContent] = useState('');
-const [notes, setNotes] = useState<{ id: string; book_id: string; content: string; duration_min: number; created_at: string }[]>([]);
+  const [notes, setNotes] = useState<{ id: string; book_id: string; content: string; duration_min: number; created_at: string }[]>([]);
+  const [activeNoteId, setActiveNoteId] = useState<string | null>(null);
+  const [editingNote, setEditingNote] = useState<{ id: string; content: string } | null>(null);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [editedContent, setEditedContent] = useState('');
 
-useEffect(() => {
+  useEffect(() => {
+    // 重置滾動位置到頂部
+    window.scrollTo(0, 0);
   // 重置滾動位置到頂部
   window.scrollTo(0, 0);
 
@@ -25,6 +31,49 @@ useEffect(() => {
     loadNotes();
   }
 }, [bookId]);
+
+  const handleEdit = (note: { id: string; content: string }) => {
+    setEditingNote(note);
+    setEditedContent(note.content);
+    setIsEditModalVisible(true);
+  };
+
+  const handleDelete = async (noteId: string) => {
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .delete()
+        .eq('id', noteId);
+
+      if (error) throw error;
+
+      setActiveNoteId(null);
+      await loadNotes();
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      message.error('刪除筆記時發生錯誤');
+    }
+  };
+
+  const handleEditSubmit = async () => {
+    if (!editingNote) return;
+
+    try {
+      const { error } = await supabase
+        .from('notes')
+        .update({ content: editedContent })
+        .eq('id', editingNote.id);
+
+      if (error) throw error;
+
+      message.success('筆記已更新');
+      setIsEditModalVisible(false);
+      loadNotes();
+    } catch (error) {
+      console.error('Error updating note:', error);
+      message.error('更新筆記時發生錯誤');
+    }
+  };
 
   const loadNotes = async () => {
     if (!bookId) return;
@@ -240,34 +289,71 @@ useEffect(() => {
             <div className="note-divider" />
             <div className="notes-section">
               {notes.length === 0 ? (
-                <div style={{ color: 'rgba(255, 255, 255, 0.65)', marginBottom: '16px' }}>
-                  0 條筆記
+                <div style={{ color: 'rgba(255, 255, 255, 0.65)', marginBottom: '16px', textAlign: 'center', width: '100%' }}>
+                  沒有筆記
                 </div>
               ) : (
                 <div className="notes-list">
-                {notes.map(note => (
-                  <div key={note.id} className="note-wrapper">
-                    <div className="note-item">
-                      <div className="note-content">{note.content}</div>
+                  {notes.map(note => (
+                    <div
+                      key={note.id}
+                      className={`note-wrapper ${activeNoteId === note.id ? 'active' : ''}`}
+                      onClick={() => setActiveNoteId(activeNoteId === note.id ? null : note.id)}
+                    >
+                      <div className="note-item">
+                        <div className="note-content">{note.content}</div>
+                      </div>
+                      <div className="note-info">
+                        <div className="note-actions">
+                          <Button
+                            type="text"
+                            icon={<EditOutlined />}
+                            onClick={() => handleEdit(note)}
+                            style={{ color: '#fff' }}
+                          />
+                          <Button
+                            type="text"
+                            icon={<DeleteOutlined />}
+                            onClick={() => handleDelete(note.id)}
+                            style={{ color: '#ff4d4f' }}
+                          />
+                        </div>
+                        <div className="note-time-wrapper">
+                          <div className="note-time">
+                            {new Date(note.created_at).toLocaleString('zh-TW', {
+                              year: 'numeric',
+                              month: '2-digit',
+                              day: '2-digit',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              hour12: false
+                            }).replace(/\//g, '.').replace(' ', ' ')}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <div className="note-time">
-                      {new Date(note.created_at).toLocaleString('zh-TW', {
-                        year: 'numeric',
-                        month: '2-digit',
-                        day: '2-digit',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false
-                      }).replace(/\//g, '.').replace(' ', ' ')}
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>
         </div>
       </Content>
+
+      <Modal
+        title="編輯筆記"
+        open={isEditModalVisible}
+        onOk={handleEditSubmit}
+        onCancel={() => setIsEditModalVisible(false)}
+        okText="確定"
+        cancelText="取消"
+      >
+        <Input.TextArea
+          value={editedContent}
+          onChange={(e) => setEditedContent(e.target.value)}
+          rows={6}
+        />
+      </Modal>
     </Layout>
   );
 };
