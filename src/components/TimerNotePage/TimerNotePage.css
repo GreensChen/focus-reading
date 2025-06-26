@@ -94,6 +94,10 @@
   touch-action: manipulation;
 }
 
+.timer-control-button::after {
+  display: none !important;
+}
+
 .timer-control-button .anticon {
   font-size: 32px;
   color: #fff;
@@ -119,19 +123,24 @@
 
 .timer-control-button:active .anticon {
   color: #00D4AA;
+  transition: color 0.3s ease;
 }
 
 .timer-control-button:active .timer-button-text {
   color: rgba(0, 212, 170, 0.65);
+  transition: color 0.3s ease;
 }
 
 @media (hover: none) {
-  .timer-control-button:active {
+  .timer-control-button:active,
+  .timer-control-button:focus {
     background-color: transparent !important;
   }
   
-  .timer-control-button:active::after {
-    opacity: 0;
+  .timer-control-button:active::after,
+  .timer-control-button:focus::after {
+    opacity: 0 !important;
+    display: none !important;
   }
 }
 

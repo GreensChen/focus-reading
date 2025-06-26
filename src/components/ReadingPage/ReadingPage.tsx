@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Button, Spin } from 'antd';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { LeftOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import type { Database } from '../../lib/database.types';
@@ -22,6 +22,7 @@ const { Content } = Layout;
 const ReadingPage: React.FC = () => {
   const [bookTitle, setBookTitle] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
   const { bookId: rawBookId } = useParams<{ bookId: string }>();
   const bookId = rawBookId?.trim();
   const [notes, setNotes] = useState<Note[]>([]);
@@ -127,7 +128,14 @@ const ReadingPage: React.FC = () => {
           <Button
             type="text"
             icon={<LeftOutlined />}
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              const fromTimer = location.state && (location.state as { from: string }).from === 'timer';
+              if (fromTimer) {
+                navigate('/');
+              } else {
+                navigate(-1);
+              }
+            }}
             className="back-button"
           />
           <div className="book-title">{bookTitle}</div>

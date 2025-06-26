@@ -201,7 +201,7 @@ const TimerNotePage: React.FC = () => {
       console.error('Error in handleComplete:', error);
     } finally {
       // 無論是否有錯誤，都導航回閱讀頁面
-      _navigate(`/book/${bookId}`);
+      _navigate(`/book/${bookId}`, { state: { from: 'timer' } });
     }
   };
 
@@ -211,7 +211,7 @@ const TimerNotePage: React.FC = () => {
         className="back-button"
         type="text"
         icon={<LeftOutlined />}
-        onClick={() => _navigate(`/book/${bookId}`)}
+        onClick={() => _navigate(`/book/${bookId}`, { state: { from: 'timer' } })}
       />
       <Content className="timer-note-content">
         <div className="timer-display">
