@@ -113,22 +113,22 @@
   line-height: 1;
 }
 
-.timer-control-button:hover .anticon {
-  color: #00D4AA;
-}
+@media (hover: hover) {
+  .timer-control-button:hover .anticon {
+    color: #00D4AA;
+  }
 
-.timer-control-button:hover .timer-button-text {
-  color: rgba(0, 212, 170, 0.65);
+  .timer-control-button:hover .timer-button-text {
+    color: rgba(0, 212, 170, 0.65);
+  }
 }
 
 .timer-control-button:active .anticon {
-  color: #00D4AA;
-  transition: color 0.3s ease;
+  color: #00D4AA !important;
 }
 
 .timer-control-button:active .timer-button-text {
-  color: rgba(0, 212, 170, 0.65);
-  transition: color 0.3s ease;
+  color: rgba(0, 212, 170, 0.65) !important;
 }
 
 @media (hover: none) {
