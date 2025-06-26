@@ -1,6 +1,6 @@
 .notes-section {
   width: 100%;
-  padding: 12px 16px 0;
+  padding: 12px 16px 80px;
 }
 
 .notes-list {
@@ -33,34 +33,49 @@
 }
 
 .note-actions {
+  position: relative;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
+  margin-top: -4px;
 }
 
 .note-action-buttons {
+  position: absolute;
+  left: -4px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
-  gap: 4px;
+  gap: 8px;
 }
 
 .note-action-buttons .ant-btn {
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.85);
   padding: 4px;
-  height: auto;
+  height: 32px;
+  width: 32px;
   min-width: auto;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .note-action-buttons .ant-btn:hover {
-  color: #00D4AA;
   background: transparent;
 }
 
-.note-time {
+.note-action-buttons .ant-btn:last-child {
+  color: #ff4d4f;
+}
+
+.note-actions .note-time {
   color: rgba(255, 255, 255, 0.45);
-  font-size: 12px;
+  font-size: 14px;
   text-align: right;
-  position: relative;
-  top: -4px;
+  width: 130px;
+  flex-shrink: 0;
+
 }
 
 .note-divider {

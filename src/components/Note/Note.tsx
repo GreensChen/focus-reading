@@ -12,7 +12,6 @@ interface NoteProps {
 
 const Note: React.FC<NoteProps> = ({ content, createdAt, onEdit, onDelete }) => {
   const [isSelected, setIsSelected] = useState(false);
-  const formattedTime = dayjs(createdAt).format('YYYY.MM.DD HH:mm');
 
   return (
     <div 
@@ -41,7 +40,9 @@ const Note: React.FC<NoteProps> = ({ content, createdAt, onEdit, onDelete }) => 
             />
           </div>
         )}
-        <div className="note-time">{formattedTime}</div>
+        <div className="note-time">
+          {dayjs(createdAt).format('YYYY.MM.DD HH:mm')}
+        </div>
       </div>
     </div>
   );
