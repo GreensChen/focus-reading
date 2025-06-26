@@ -1,9 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ConfigProvider } from 'antd';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Bookshelf from './components/Bookshelf/Bookshelf';
 import ReadingPage from './components/ReadingPage/ReadingPage';
 import TimerNotePage from './components/TimerNotePage/TimerNotePage';
+
+const ScrollToTop = () => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
+
+  return null;
+};
 
 const App: React.FC = () => {
   return (
@@ -15,6 +25,7 @@ const App: React.FC = () => {
       }}
     >
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<Bookshelf />} />
           <Route path="/book/:bookId" element={<ReadingPage />} />

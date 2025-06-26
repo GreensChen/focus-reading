@@ -86,13 +86,15 @@
 .add-book-button {
   right: 24px !important;
   bottom: 24px !important;
-  background-color: transparent !important;
+  width: 48px !important;
+  height: 48px !important;
+  background-color: #fff !important;
 }
 
 .add-book-button .ant-float-btn-body {
-  background-color: #fff !important;
-  width: 48px !important;
-  height: 48px !important;
+  background-color: transparent !important;
+  width: 100% !important;
+  height: 100% !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
 }
 
