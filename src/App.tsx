@@ -3,6 +3,7 @@ import { ConfigProvider } from 'antd';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Bookshelf from './components/Bookshelf/Bookshelf';
 import ReadingPage from './components/ReadingPage/ReadingPage';
+import TimerNotePage from './components/TimerNotePage/TimerNotePage';
 
 const App: React.FC = () => {
   return (
@@ -17,6 +18,7 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<Bookshelf />} />
           <Route path="/book/:bookId" element={<ReadingPage />} />
+          <Route path="/timer/:bookId/:minutes" element={<TimerNotePage />} />
         </Routes>
       </BrowserRouter>
     </ConfigProvider>

@@ -38,7 +38,7 @@
 .time-text {
   font-size: 64px;
   font-weight: 200;
-  color: #fff;
+  color: #00D4AA;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
   line-height: 1;
 }
@@ -179,4 +179,34 @@
 
 .time-select-button:active .time-unit {
   color: rgba(255, 255, 255, 0.65);
+}
+
+.reading-page .notes-list {
+  width: 100%;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reading-page .note-card {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border: none !important;
+  border-radius: 8px;
+}
+
+.reading-page .note-card .ant-card-body {
+  padding: 16px !important;
+}
+
+.reading-page .note-content {
+  color: #fff;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 8px;
+}
+
+.reading-page .note-time {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
 }

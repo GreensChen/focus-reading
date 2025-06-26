@@ -56,7 +56,7 @@ const Bookshelf: React.FC = () => {
                     <div className="book-author">{book.author}</div>
                     <div className="book-stats">
                       <div className="book-reading-time">
-                        <span className="highlight">{book.total_read_minutes}</span> 分鐘 | <span className="highlight">{book.notes_count || 5}</span> 篇筆記
+                        <span className="highlight">{Math.floor((book.total_read_time || 0) / 60)}</span> 分鐘 | <span className="highlight">{book.notes_count || 0}</span> 篇筆記
                       </div>
                     </div>
                   </div>

@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase, Book } from '../lib/supabase';
+import { supabase } from '../supabaseClient';
+import type { Database } from '../lib/database.types';
+
+type Book = Database['public']['Tables']['books']['Row'];
 
 export const useBooks = () => {
   const [books, setBooks] = useState<Book[]>([]);
@@ -13,14 +16,22 @@ export const useBooks = () => {
       console.log('Fetching books...');
       const { data, error } = await supabase
         .from('books')
-        .select('*')
+        .select(`
+          *,
+          notes_count:notes(count)
+        `)
         .order('created_at', { ascending: false });
 
       console.log('Supabase response:', { data, error });
 
       if (error) throw error;
       if (data) {
-        setBooks(data);
+        // 處理返回的數據，將 notes_count 從 { count: number } 轉換為 number
+        const processedData = data.map(book => ({
+          ...book,
+          notes_count: book.notes_count?.[0]?.count || 0
+        }));
+        setBooks(processedData);
       }
     } catch (err) {
       console.error('Error fetching books:', err);
@@ -112,12 +123,12 @@ export const useBooks = () => {
   }, []);
 
   // 新增書籍
-  const addBook = async (bookData: Omit<Book, 'id' | 'created_at' | 'total_read_minutes' | 'notes_count'>) => {
+  const addBook = async (bookData: Omit<Book, 'id' | 'created_at' | 'total_read_time' | 'notes_count'>) => {
     try {
       console.log('Adding book:', bookData);
       const { data, error } = await supabase
         .from('books')
-        .insert([{ ...bookData, total_read_minutes: 0, notes_count: 0 }])
+        .insert([{ ...bookData, total_read_time: 0, notes_count: 0 }])
         .select()
         .single();
 

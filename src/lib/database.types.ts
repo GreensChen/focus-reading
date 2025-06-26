@@ -8,7 +8,8 @@ export interface Database {
           author: string | null;
           publisher: string | null;
           cover_url: string | null;
-          total_read_minutes: number;
+          total_read_time: number;
+          notes_count: number;
           created_at: string;
         };
         Insert: {
@@ -17,7 +18,7 @@ export interface Database {
           author?: string | null;
           publisher?: string | null;
           cover_url?: string | null;
-          total_read_minutes?: number;
+          total_read_time?: number;
           created_at?: string;
         };
         Update: {
@@ -26,7 +27,7 @@ export interface Database {
           author?: string | null;
           publisher?: string | null;
           cover_url?: string | null;
-          total_read_minutes?: number;
+          total_read_time?: number;
           created_at?: string;
         };
       };
