@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Button, Spin, Modal, Input } from 'antd';
+import { Layout, Button, Spin, Modal, Input, message } from 'antd';
 import { EditOutlined, DeleteOutlined, CloseOutlined } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import { LeftOutlined } from '@ant-design/icons';
@@ -150,14 +150,17 @@ const ReadingPage: React.FC = () => {
 
       if (error) {
         console.error('Error deleting note:', error);
+        message.error('刪除筆記失敗，請稍後再試');
         return;
       }
 
-      loadNotes();
+      setNotes(prevNotes => prevNotes.filter(note => note.id !== selectedNote.id));
       setIsDeleteModalVisible(false);
       setSelectedNote(null);
+      message.success('筆記已刪除');
     } catch (error) {
       console.error('Error in handleDeleteConfirm:', error);
+      message.error('刪除筆記失敗，請稍後再試');
     }
   };
 
@@ -265,7 +268,7 @@ const ReadingPage: React.FC = () => {
         type="text" 
         icon={<LeftOutlined />} 
         className="back-button"
-        onClick={() => navigate(-1)}
+        onClick={() => navigate('/')}
       />
       <Content className="timer-note-content">
         {loading ? (
@@ -310,9 +313,14 @@ const ReadingPage: React.FC = () => {
               <div className="note-divider" />
               <div className="notes-section">
                 {notes.length === 0 ? (
-                  <div style={{ color: 'rgba(255, 255, 255, 0.65)', marginBottom: '16px' }}>
-                    0 條筆記
-                  </div>
+                  <div style={{ 
+                  color: 'rgba(255, 255, 255, 0.65)', 
+                  marginBottom: '16px',
+                  textAlign: 'center',
+                  width: '100%'
+                }}>
+                  {notes.length === 0 ? '目前沒有筆記' : `${notes.length} 條筆記`}
+                </div>
                 ) : (
                   <div className="notes-list">
                     {notes.map(note => (

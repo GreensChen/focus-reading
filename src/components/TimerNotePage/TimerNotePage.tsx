@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Button, Input, Modal } from 'antd';
-import { EditOutlined, DeleteOutlined, CloseOutlined } from '@ant-design/icons';
+import { Layout, Button, Input } from 'antd';
+
 import { useParams, useNavigate } from 'react-router-dom';
 import { PlayCircleOutlined, PauseCircleOutlined, RedoOutlined, LeftOutlined, CheckCircleOutlined, SendOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
@@ -10,151 +10,35 @@ import '../../styles/note.css';
 const { Content } = Layout;
 const { TextArea } = Input;
 
-interface ActionModalProps {
-  visible: boolean;
-  _note: { id: string; content: string; created_at: string; } | null;
-  onEdit: () => void;
-  onDelete: () => void;
-  onCancel: () => void;
+interface Note {
+  id: string;
+  book_id: string;
+  content: string;
+  duration_min: number;
+  created_at: string;
 }
 
-const ActionModal: React.FC<ActionModalProps> = ({ visible, _note, onEdit, onDelete, onCancel }) => (
-  <Modal
-    open={visible}
-    footer={null}
-    onCancel={onCancel}
-    centered
-    closable={false}
-    width={200}
-    modalRender={(_modal) => (
-      <div style={{
-        backgroundColor: '#141414',
-        padding: '12px',
-        borderRadius: '8px',
-        border: '1px solid rgba(255, 255, 255, 0.05)'
-      }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <Button 
-            type="text"
-            icon={<EditOutlined />} 
-            onClick={onEdit}
-            style={{ height: '40px', color: '#fff', textAlign: 'left', padding: '8px' }}
-          >
-            編輯
-          </Button>
-          <Button 
-            type="text"
-            icon={<DeleteOutlined />} 
-            onClick={onDelete}
-            danger
-            style={{ height: '40px', textAlign: 'left', padding: '8px' }}
-          >
-            刪除
-          </Button>
-          <Button 
-            type="text"
-            icon={<CloseOutlined />} 
-            onClick={onCancel}
-            style={{ height: '40px', color: '#fff', textAlign: 'left', padding: '8px' }}
-          >
-            取消
-          </Button>
-        </div>
-      </div>
-    )}
-    styles={{
-      mask: {
-        backgroundColor: 'rgba(0, 0, 0, 0.45)'
-      },
-      content: {
-        boxShadow: 'none',
-        backgroundColor: 'transparent'
-      }
-    }}
-  />
-);
-
 const TimerNotePage: React.FC = () => {
-  const [selectedNote, setSelectedNote] = useState<{ id: string; content: string; created_at: string; } | null>(null);
-  const [isActionModalVisible, setIsActionModalVisible] = useState(false);
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
-  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
-  const [editedContent, setEditedContent] = useState('');
-  const navigate = useNavigate();
+  const [bookTitle, setBookTitle] = useState('');
+  const _navigate = useNavigate();
   const { bookId, minutes: initialMinutes } = useParams<{ bookId: string; minutes: string }>();
   const [timeLeft, setTimeLeft] = useState(parseInt(initialMinutes || '0') * 60);
   const [isRunning, setIsRunning] = useState(true);
   const [noteContent, setNoteContent] = useState('');
-const [notes, setNotes] = useState<{ id: string; book_id: string; content: string; duration_min: number; created_at: string }[]>([]);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [startTime] = useState(Date.now());
+  const [pauseStartTime, setPauseStartTime] = useState<number | null>(null);
+  const [totalPausedTime, setTotalPausedTime] = useState(0);
+  const [_timer, _setTimer] = useState<NodeJS.Timeout | null>(null);
 
-useEffect(() => {
-  // 重置滾動位置到頂部
-  window.scrollTo(0, 0);
+  useEffect(() => {
+    // 重置滾動位置到頂部
+    window.scrollTo(0, 0);
 
-  if (bookId) {
-    loadNotes();
-  }
-}, [bookId]);
-
-  const handleNoteClick = (note: { id: string; content: string; created_at: string; }) => {
-    setSelectedNote(note);
-    setIsActionModalVisible(true);
-  };
-
-  const handleEdit = () => {
-    setIsActionModalVisible(false);
-    setEditedContent(selectedNote?.content || '');
-    setIsEditModalVisible(true);
-  };
-
-  const handleDelete = () => {
-    setIsActionModalVisible(false);
-    setIsDeleteModalVisible(true);
-  };
-
-  const handleEditConfirm = async () => {
-    if (!selectedNote || !editedContent.trim()) return;
-
-    try {
-      const { error } = await supabase
-        .from('notes')
-        .update({ content: editedContent.trim() })
-        .eq('id', selectedNote.id);
-
-      if (error) {
-        console.error('Error updating note:', error);
-        return;
-      }
-
+    if (bookId) {
       loadNotes();
-      setIsEditModalVisible(false);
-      setSelectedNote(null);
-    } catch (error) {
-      console.error('Error in handleEditConfirm:', error);
     }
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (!selectedNote) return;
-
-    try {
-      const { error } = await supabase
-        .from('notes')
-        .delete()
-        .eq('id', selectedNote.id);
-
-      if (error) {
-        console.error('Error deleting note:', error);
-        return;
-      }
-
-      loadNotes();
-      setIsDeleteModalVisible(false);
-      setSelectedNote(null);
-    } catch (error) {
-      console.error('Error in handleDeleteConfirm:', error);
-    }
-  };
+  }, [bookId]);
 
   const loadNotes = async () => {
     if (!bookId) return;
@@ -177,10 +61,7 @@ useEffect(() => {
     }
   };
 
-  const [bookTitle, setBookTitle] = useState('');
-  const [startTime] = useState(Date.now());
-  const [totalPausedTime, setTotalPausedTime] = useState(0);
-  const [pauseStartTime, setPauseStartTime] = useState<number | null>(null);
+
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
@@ -207,7 +88,7 @@ useEffect(() => {
   }, [bookId]);
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let intervalTimer: NodeJS.Timeout;
     
     if (isRunning && timeLeft > 0) {
       // 如果是從暫停狀態開始運行，記錄暫停的總時間
@@ -216,16 +97,18 @@ useEffect(() => {
         setPauseStartTime(null);
       }
 
-      timer = setInterval(() => {
+      intervalTimer = setInterval(() => {
         setTimeLeft(prev => prev - 1);
       }, 1000);
+      _setTimer(intervalTimer);
     } else if (timeLeft === 0) {
       setIsRunning(false);
     }
 
     return () => {
-      if (timer) {
-        clearInterval(timer);
+      if (intervalTimer) {
+        clearInterval(intervalTimer);
+        _setTimer(null);
       }
     };
   }, [isRunning, timeLeft, pauseStartTime]);
@@ -317,7 +200,7 @@ useEffect(() => {
       console.error('Error in handleComplete:', error);
     } finally {
       // 無論是否有錯誤，都導航回閱讀頁面
-      navigate(`/book/${bookId}`);
+      _navigate(`/book/${bookId}`);
     }
   };
 
@@ -327,7 +210,8 @@ useEffect(() => {
         className="back-button"
         type="text"
         icon={<LeftOutlined />}
-        onClick={() => navigate(-1)}      />
+        onClick={() => _navigate(`/book/${bookId}`)}
+      />
       <Content className="timer-note-content">
         <div className="timer-display">
           <div className="timer-title">{bookTitle}</div>
@@ -380,16 +264,14 @@ useEffect(() => {
             <div className="note-divider" />
             <div className="notes-section">
               {notes.length === 0 ? (
-                <div style={{ color: 'rgba(255, 255, 255, 0.65)', marginBottom: '16px' }}>
-                  0 條筆記
+                <div style={{ color: 'rgba(255, 255, 255, 0.65)', marginBottom: '16px', textAlign: 'center' }}>
+                  沒有筆記
                 </div>
               ) : (
                 <div className="notes-list">
                   {notes.map(note => (
                     <div key={note.id} className="note-wrapper">
-                      <div className="note-item" onClick={() => handleNoteClick(note)}>
-                        <div className="note-content">{note.content}</div>
-                      </div>
+                      <div className="note-content">{note.content}</div>
                       <div className="note-time">
                         {new Date(note.created_at).toLocaleString('zh-TW', {
                           year: 'numeric',
@@ -404,57 +286,11 @@ useEffect(() => {
                   ))}
                 </div>
               )}
-
-              <ActionModal
-                visible={isActionModalVisible}
-                _note={selectedNote}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                onCancel={() => {
-                  setIsActionModalVisible(false);
-                  setSelectedNote(null);
-                }}
-              />
-
-              <Modal
-                title="編輯筆記"
-                open={isEditModalVisible}
-                onOk={handleEditConfirm}
-                onCancel={() => {
-                  setIsEditModalVisible(false);
-                  setSelectedNote(null);
-                }}
-                okText="確認"
-                cancelText="取消"
-                centered
-              >
-                <TextArea
-                  value={editedContent}
-                  onChange={e => setEditedContent(e.target.value)}
-                  placeholder="請輸入筆記內容"
-                  autoSize={{ minRows: 3, maxRows: 6 }}
-                />
-              </Modal>
-
-              <Modal
-                title="刪除筆記"
-                open={isDeleteModalVisible}
-                onOk={handleDeleteConfirm}
-                onCancel={() => {
-                  setIsDeleteModalVisible(false);
-                  setSelectedNote(null);
-                }}
-                okText="刪除"
-                cancelText="取消"
-                centered
-                okButtonProps={{ danger: true }}
-              >
-                <p>確定要刪除這條筆記嗎？此操作無法復原。</p>
-              </Modal>
             </div>
           </div>
         </div>
       </Content>
+
     </Layout>
   );
 };
