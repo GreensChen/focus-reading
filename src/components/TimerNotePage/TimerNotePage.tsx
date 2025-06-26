@@ -4,6 +4,7 @@ import { Layout, Button, Input } from 'antd';
 import { useParams, useNavigate } from 'react-router-dom';
 import { PlayCircleOutlined, PauseCircleOutlined, RedoOutlined, LeftOutlined, CheckCircleOutlined, SendOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
+import Note from '../Note/Note';
 import './TimerNotePage.css';
 import '../../styles/note.css';
 
@@ -270,19 +271,18 @@ const TimerNotePage: React.FC = () => {
               ) : (
                 <div className="notes-list">
                   {notes.map(note => (
-                    <div key={note.id} className="note-wrapper">
-                      <div className="note-content">{note.content}</div>
-                      <div className="note-time">
-                        {new Date(note.created_at).toLocaleString('zh-TW', {
-                          year: 'numeric',
-                          month: '2-digit',
-                          day: '2-digit',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          hour12: false
-                        }).replace(/\//g, '.').replace(' ', ' ')}
-                      </div>
-                    </div>
+                    <Note
+                      key={note.id}
+                      content={note.content}
+                      timestamp={new Date(note.created_at).toLocaleString('zh-TW', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                      }).replace(/\//g, '.')}
+                    />
                   ))}
                 </div>
               )}
