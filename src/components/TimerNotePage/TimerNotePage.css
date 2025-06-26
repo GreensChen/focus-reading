@@ -1,6 +1,6 @@
 .timer-note-page {
   min-height: 100vh;
-  background-color: #1a1a1a;
+  background-color: transparent;
   position: relative;
   padding-top: env(safe-area-inset-top);
 }
@@ -52,7 +52,7 @@
 
 .note-section .note-textarea.ant-input.ant-input-outlined {
   margin-bottom: 12px;
-  background-color: #1a1a1a;
+  background-color: transparent;
   border: 1px solid #242424;
   border-radius: 8px;
   color: #ffffff;
@@ -65,7 +65,7 @@
 .note-section .note-textarea.ant-input.ant-input-outlined:not(.ant-input-disabled) {
   box-shadow: none;
   border: 1px solid #242424;
-  background-color: #1a1a1a;
+  background-color: transparent;
 }
 
 .note-section .note-textarea.ant-input::placeholder {

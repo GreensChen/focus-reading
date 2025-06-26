@@ -1,6 +1,6 @@
 .reading-page {
   min-height: 100vh;
-  background-color: #1a1a1a;
+  background-color: transparent;
   position: relative;
 }
 
@@ -14,7 +14,7 @@
   padding: 0 16px;
   display: flex;
   align-items: center;
-  background-color: #1a1a1a;
+  background-color: transparent;
 }
 
 .back-button {
