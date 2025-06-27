@@ -90,10 +90,12 @@
     margin-bottom: 24px !important;
   }
 
-  .ant-form-item-label > label {
+  .ant-form-item-label > label,
+  .ant-form-item .ant-form-item-label > label {
     font-size: 16px !important;
     height: auto !important;
     margin-bottom: 4px !important;
+    color: #fff !important;
   }
 }
 
