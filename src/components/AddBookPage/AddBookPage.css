@@ -29,11 +29,14 @@
 }
 
 .add-book-page .submit-button {
+  width: 100%;
   height: 40px;
+  margin-top: 32px;
   font-weight: 500;
   background-color: #00D4AA !important;
   color: #fff;
   border: none !important;
+  font-size: 16px;
 }
 
 .add-book-page .submit-button:disabled {
@@ -51,8 +54,47 @@
   margin: 0 auto;
 }
 
-.add-book-page .book-form :where(.css-dev-only-do-not-override-fbu07f).ant-form-item .ant-form-item-label >label {
-  color: rgba(255, 255, 255, 0.65);
+.add-book-page .book-form :where(.css-dev-only-do-not-override-fbu07f).ant-form-item .ant-form-item-label > label {
+  color: #fff;
+  font-size: 16px;
+  margin-bottom: 4px !important;
+}
+
+.ant-input,
+.ant-input-affix-wrapper {
+  background-color: #242424 !important;
+  border: 1px solid #333 !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  font-size: 14px !important;
+  color: #fff !important;
+}
+
+.ant-input::placeholder {
+  color: #666;
+  font-size: 14px;
+}
+
+/* 修正手機上的輸入框樣式 */
+@media (max-width: 768px) {
+  .ant-input,
+  .ant-input-affix-wrapper {
+    -webkit-appearance: none;
+    appearance: none;
+    font-size: 16px !important;
+    line-height: 1.4;
+    padding: 12px !important;
+  }
+
+  .ant-form-item {
+    margin-bottom: 24px !important;
+  }
+
+  .ant-form-item-label > label {
+    font-size: 16px !important;
+    height: auto !important;
+    margin-bottom: 4px !important;
+  }
 }
 
 .add-book-page .book-form :where(.css-dev-only-do-not-override-fbu07f).ant-input {
