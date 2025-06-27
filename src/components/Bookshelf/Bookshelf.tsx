@@ -41,14 +41,12 @@ const Bookshelf: React.FC = () => {
               >
                 <div className="book-preview">
                   <div className="book-cover-container">
-                    {book.cover_url ? (
+                    {book.cover_url && (
                       <img
                         src={book.cover_url}
                         alt={book.title}
                         className="book-cover"
                       />
-                    ) : (
-                      <div className="book-cover-placeholder">📚</div>
                     )}
                   </div>
                   <div className="book-details">
@@ -70,6 +68,7 @@ const Bookshelf: React.FC = () => {
         icon={<PlusOutlined />}
         type="primary"
         className="add-book-button"
+        onClick={() => navigate('/add-book')}
       />
     </Layout>
   );

@@ -162,6 +162,9 @@
 .book-cover-container {
   flex-shrink: 0;
   width: 116px;
+  min-height: 154px;
+  background-color: #2d2d2d;
+  border-radius: 8px;
 }
 
 .book-cover {

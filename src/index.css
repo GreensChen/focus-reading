@@ -4,6 +4,11 @@
   box-sizing: border-box;
 }
 
+input, textarea {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
 html, body {
   margin: 0;
   padding: 0;

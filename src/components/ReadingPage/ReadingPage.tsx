@@ -26,6 +26,34 @@ const ReadingPage: React.FC = () => {
   const bookId = rawBookId?.trim();
   const [notes, setNotes] = useState<Note[]>([]);
 
+  const handleEdit = () => {
+    // TODO: 實現編輯書籍功能
+    console.log('Edit book:', bookId);
+  };
+
+  const handleDelete = async () => {
+    if (!bookId) return;
+
+    try {
+      // 先刪除所有相關的筆記
+      await supabase
+        .from('notes')
+        .delete()
+        .eq('book_id', bookId);
+
+      // 然後刪除書籍
+      await supabase
+        .from('books')
+        .delete()
+        .eq('id', bookId);
+
+      // 導航回書架頁面
+      navigate('/');
+    } catch (error) {
+      console.error('Error deleting book:', error);
+    }
+  };
+
 
 
 
@@ -119,6 +147,9 @@ const ReadingPage: React.FC = () => {
               navigate(-1);
             }
           }}
+          showMoreOptions
+          onEdit={handleEdit}
+          onDelete={handleDelete}
         />
         <div className="reading-page-content">
           {loading ? (
