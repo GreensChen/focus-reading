@@ -27,11 +27,11 @@ const ReadingPage: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
 
   const handleEdit = () => {
-    // TODO: 實現編輯書籍功能
-    console.log('Edit book:', bookId);
+    navigate(`/book/${bookId}/edit`);
   };
 
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
 
   const handleDelete = () => {
     setDeleteModalVisible(true);
@@ -68,10 +68,6 @@ const ReadingPage: React.FC = () => {
     }
   };
 
-
-
-
-
   const loadNotes = async () => {
     if (!bookId) return;
     
@@ -95,7 +91,6 @@ const ReadingPage: React.FC = () => {
 
   const [book, setBook] = useState<Database['public']['Tables']['books']['Row'] | null>(null);
   const [loading, setLoading] = useState(true);
-
 
   const fetchBook = async () => {
     console.log('Fetching book with ID:', bookId);
@@ -181,6 +176,7 @@ const ReadingPage: React.FC = () => {
         <h3 className="modal-title">刪除書籍</h3>
         <p>確定要刪除這本書籍跟所有筆記嗎？</p>
       </Modal>
+
       <Content className="reading-page-content">
         <Header
           onBack={() => {

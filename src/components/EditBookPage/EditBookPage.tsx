@@ -3,74 +3,63 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Form, Input, message, Spin } from 'antd';
 import { PlusOutlined, LeftOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
-import './AddBookPage.css';
+import './EditBookPage.css';
 
 interface BookFormData {
   title: string;
   author: string;
   publisher: string;
   cover_file?: File;
-  id?: string;
-  cover_url?: string;
 }
 
-interface AddBookPageProps {
-  bookData?: BookFormData;
-  onSuccess?: () => void;
-}
-
-const AddBookPage: React.FC<AddBookPageProps> = ({ bookData, onSuccess }) => {
+const EditBookPage: React.FC = () => {
   const { bookId } = useParams();
   const navigate = useNavigate();
   const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [initialValues, setInitialValues] = useState<BookFormData | null>(null);
 
   useEffect(() => {
     if (!bookId) {
-      setInitializing(false);
+      navigate('/');
       return;
     }
 
     const loadBookData = async () => {
-        const { data: book, error } = await supabase
-          .from('books')
-          .select('*')
-          .eq('id', bookId)
-          .single();
+      const { data: book, error } = await supabase
+        .from('books')
+        .select('*')
+        .eq('id', bookId)
+        .single();
 
-        if (error) {
-          console.error('Error loading book:', error);
-          message.error('載入書籍資料失敗');
-          navigate('/');
-          return;
-        }
+      if (error) {
+        console.error('Error loading book:', error);
+        message.error('載入書籍資料失敗');
+        navigate('/');
+        return;
+      }
 
-        if (book) {
-          form.setFieldsValue({
-            title: book.title,
-            author: book.author,
-            publisher: book.publisher
-          });
-          setPreviewUrl(book.cover_url || '');
-        }
+      if (book) {
+        const values = {
+          title: book.title,
+          author: book.author,
+          publisher: book.publisher
+        };
+        form.setFieldsValue(values);
+        setInitialValues(values);
+        setPreviewUrl(book.cover_url || '');
+      }
       setInitializing(false);
     };
 
     loadBookData();
   }, [bookId, form, navigate]);
 
-  if (initializing) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  const [loading, setLoading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string>('');
-
   const handleSubmit = async (values: BookFormData) => {
+    if (!bookId) return;
+    
     try {
       setLoading(true);
       let cover_url = null;
@@ -140,109 +129,89 @@ const AddBookPage: React.FC<AddBookPageProps> = ({ bookData, onSuccess }) => {
       }
       
       try {
-        // 新增或更新書籍
-        const query = bookData?.id
-          ? supabase
-              .from('books')
-              .update({
-                title: values.title,
-                author: values.author,
-                publisher: values.publisher,
-                cover_url: cover_url || bookData.cover_url,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', bookData.id)
-          : supabase
-              .from('books')
-              .insert([{
-                title: values.title,
-                author: values.author,
-                publisher: values.publisher,
-                cover_url,
-                total_read_time: 0,
-                created_at: new Date().toISOString()
-              }
-              ])
-              .select();
+        // 更新書籍
+        const { error } = await supabase
+          .from('books')
+          .update({
+            title: values.title,
+            author: values.author,
+            publisher: values.publisher,
+            cover_url: cover_url || previewUrl
+          })
+          .eq('id', bookId);
           
-        const { error, data } = await query;
-        
         if (error) {
           console.error('Supabase error:', error);
           if (error.message.includes('security policy')) {
-            message.error('正在設定資料庫權限，請稍後再試');
+            message.error('權限不足，請重新登入');
           } else {
-            message.error(`新增書籍失敗: ${error.message}`);
+            message.error(`更新失敗: ${error.message}`);
           }
           setLoading(false);
           return;
         }
-
-        if (!data || data.length === 0) {
-          message.error('新增書籍失敗，請稍後再試');
-          setLoading(false);
-          return;
-        }
-      } catch (dbError: any) {
-        console.error('Database error:', dbError);
-        message.error('資料庫操作失敗，請稍後再試');
+      } catch (error: any) {
+        console.error('Error updating book:', error);
+        message.error('系統錯誤，請稍後再試');
         setLoading(false);
         return;
       }
       
-      message.success(bookData?.id ? '更新成功' : '新增成功');
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        navigate('/');
-      }
+      message.success('更新成功');
+      navigate(`/book/${bookId}`, { replace: true });
     } catch (error: any) {
-      console.error('Error adding book:', error);
+      console.error('Error updating book:', error);
       message.error('系統錯誤，請稍後再試');
     } finally {
       setLoading(false);
     }
   };
 
+  if (initializing) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
-    <div className="add-book-page">
+    <div className="edit-book-page">
       <div className="header">
-          <Button
-            type="text"
-            icon={<LeftOutlined />}
-            onClick={() => bookId ? navigate(`/book/${bookId}`) : navigate('/')}
-            className="back-button"
-          />
+        <Button
+          type="text"
+          icon={<LeftOutlined />}
+          onClick={() => navigate(`/book/${bookId}`, { replace: true })}
+          className="back-button"
+        />
       </div>
       <div className="content">
         <Form
           form={form}
-          layout="vertical"
           onFinish={handleSubmit}
-          className="book-form"
+          layout="vertical"
+          requiredMark={false}
+          name="editBookForm"
         >
           <Form.Item
             name="title"
             label="書名"
-            required={false}
             rules={[{ required: true, message: '請輸入書名' }]}
           >
             <Input placeholder="請輸入書名" />
           </Form.Item>
-          
+
           <Form.Item
             name="author"
             label="作者"
-            required={false}
             rules={[{ required: true, message: '請輸入作者' }]}
           >
             <Input placeholder="請輸入作者名稱" />
           </Form.Item>
-          
+
           <Form.Item
             name="publisher"
             label="出版社"
-            required={false}
             rules={[{ required: true, message: '請輸入出版社' }]}
           >
             <Input placeholder="請輸入出版社名稱" />
@@ -293,21 +262,25 @@ const AddBookPage: React.FC<AddBookPageProps> = ({ bookData, onSuccess }) => {
 
           <Form.Item shouldUpdate className="submit-button-container">
             {() => {
-              const title = form.getFieldValue('title');
-              const author = form.getFieldValue('author');
-              const publisher = form.getFieldValue('publisher');
-              const isValid = title && author && publisher;
+              const currentValues = form.getFieldsValue();
+              const hasChanged = initialValues && (
+                currentValues.title !== initialValues.title ||
+                currentValues.author !== initialValues.author ||
+                currentValues.publisher !== initialValues.publisher ||
+                form.getFieldValue('cover_file')
+              );
+              const isValid = currentValues.title && currentValues.author && currentValues.publisher;
 
               return (
                 <Button
                   type="primary"
                   onClick={() => form.submit()}
                   loading={loading}
-                  disabled={!isValid}
+                  disabled={!isValid || !hasChanged}
                   className="submit-button"
                   block
                 >
-                  {bookId ? '更新' : '新增'}
+                  更新
                 </Button>
               );
             }}
@@ -318,4 +291,4 @@ const AddBookPage: React.FC<AddBookPageProps> = ({ bookData, onSuccess }) => {
   );
 };
 
-export default AddBookPage;
+export default EditBookPage;

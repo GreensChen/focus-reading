@@ -1,0 +1,125 @@
+.edit-book-page {
+  min-height: 100vh;
+  background-color: #000;
+  color: #fff;
+  padding-bottom: 24px;
+}
+
+.edit-book-page .header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  background-color: #000;
+}
+
+.edit-book-page .back-button {
+  color: #fff;
+  font-size: 20px;
+}
+
+.edit-book-page .content {
+  padding: 0 16px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.edit-book-page .ant-form-item-label > label {
+  color: #fff !important;
+}
+
+.edit-book-page .ant-input {
+  background-color: #1f1f1f;
+  border: none;
+  color: #fff;
+}
+
+.edit-book-page .ant-input::placeholder {
+  color: rgba(255, 255, 255, 0.25);
+}
+
+.edit-book-page .ant-input:focus,
+.edit-book-page .ant-input-focused {
+  box-shadow: none;
+}
+
+.edit-book-page .cover-upload {
+  width: 102px;
+  height: 102px;
+  border: 1px solid #242424;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.edit-book-page .upload-button {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.edit-book-page .upload-button:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.edit-book-page .cover-preview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.edit-book-page .cover-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.edit-book-page .cover-preview .delete-button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid #242424;
+  border-radius: 50%;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.edit-book-page .cover-preview .delete-button:hover {
+  background-color: rgba(0, 0, 0, 0.75);
+}
+
+.edit-book-page .submit-button-container {
+  margin-top: 48px;
+  padding: 0 20px;
+}
+
+.edit-book-page .submit-button {
+  width: 100%;
+  height: 44px;
+  margin-top: 32px;
+  font-weight: 500;
+  background-color: #00D4AA !important;
+  color: #fff;
+  border: none !important;
+  font-size: 16px;
+}
+
+.edit-book-page .submit-button:disabled {
+  background-color: #242424 !important;
+  color: #ffffff !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+}

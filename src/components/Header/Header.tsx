@@ -30,25 +30,28 @@ const Header: React.FC<HeaderProps> = ({
             items: [
               {
                 key: 'edit',
-                icon: <EditOutlined />,
-                label: '編輯書籍資訊',
+                icon: <EditOutlined style={{ color: '#fff' }} />,
+                label: '編輯資訊',
                 onClick: onEdit,
+                style: { color: '#fff' }
               },
               {
                 key: 'delete',
-                icon: <DeleteOutlined />,
+                icon: <DeleteOutlined style={{ color: '#ff4d4f' }} />,
                 label: '刪除',
                 danger: true,
                 onClick: onDelete,
+                style: { color: '#ff4d4f' }
               },
             ],
             style: {
               backgroundColor: '#1f1f1f',
+              color: '#fff'
             }
           }}
           trigger={['click']}
           placement="bottomRight"
-          dropdownRender={(menu) => (
+          popupRender={(menu) => (
             <div style={{ 
               backgroundColor: '#1f1f1f', 
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',

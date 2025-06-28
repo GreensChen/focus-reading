@@ -6,6 +6,7 @@ import Bookshelf from './components/Bookshelf/Bookshelf';
 import ReadingPage from './components/ReadingPage/ReadingPage';
 import TimerNotePage from './components/TimerNotePage/TimerNotePage';
 import AddBookPage from './components/AddBookPage/AddBookPage';
+import EditBookPage from './components/EditBookPage/EditBookPage';
 
 const ScrollToTop = () => {
   const location = useLocation();
@@ -28,7 +29,9 @@ const App: React.FC = () => {
     >
       <AntApp
         message={{
-          // Add your message configuration here
+          maxCount: 3,
+          duration: 2,
+          top: 24
         }}
       >
         <BrowserRouter>
@@ -36,6 +39,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Bookshelf />} />
             <Route path="/book/:bookId" element={<ReadingPage />} />
+            <Route path="/book/:bookId/edit" element={<EditBookPage />} />
             <Route path="/timer/:bookId/:minutes" element={<TimerNotePage />} />
             <Route path="/add-book" element={<AddBookPage />} />
           </Routes>
