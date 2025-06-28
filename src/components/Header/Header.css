@@ -19,7 +19,7 @@
 /* 下拉選單暗黑風格 */
 :where(.css-dev-only-do-not-override-fbu07f).ant-dropdown .ant-dropdown-menu {
   background-color: #1f1f1f !important;
-  padding: 4px !important;
+  padding: 8px !important;
   border-radius: 8px !important;
   min-width: 120px !important;
 }
@@ -27,6 +27,11 @@
 :where(.css-dev-only-do-not-override-fbu07f).ant-dropdown .ant-dropdown-menu-item {
   border-radius: 4px !important;
   color: #fff !important;
+  margin-bottom: 8px !important;
+}
+
+:where(.css-dev-only-do-not-override-fbu07f).ant-dropdown .ant-dropdown-menu-item:last-child {
+  margin-bottom: 0 !important;
 }
 
 :where(.css-dev-only-do-not-override-fbu07f).ant-dropdown .ant-dropdown-menu-item .anticon {

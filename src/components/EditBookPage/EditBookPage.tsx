@@ -186,28 +186,32 @@ const EditBookPage: React.FC = () => {
         />
       </div>
       <div className="content">
-        <Form
-          form={form}
-          onFinish={handleSubmit}
-          layout="vertical"
-          requiredMark={false}
-          name="editBookForm"
-        >
-          <Form.Item
-            name="title"
-            label="書名"
-            rules={[{ required: true, message: '請輸入書名' }]}
+        {initializing ? (
+          <div className="loading-container">
+            <Spin size="large" />
+          </div>
+        ) : (
+          <Form
+            form={form}
+            className="book-form"
+            layout="vertical"
+            onFinish={handleSubmit}
           >
-            <Input placeholder="請輸入書名" />
-          </Form.Item>
+            <Form.Item
+              name="title"
+              label="書名"
+              rules={[{ required: true, message: '請輸入書名' }]}
+            >
+              <Input placeholder="請輸入書名" />
+            </Form.Item>
 
-          <Form.Item
-            name="author"
-            label="作者"
-            rules={[{ required: true, message: '請輸入作者' }]}
-          >
-            <Input placeholder="請輸入作者名稱" />
-          </Form.Item>
+            <Form.Item
+              name="author"
+              label="作者"
+              rules={[{ required: true, message: '請輸入作者' }]}
+            >
+              <Input placeholder="請輸入作者名稱" />
+            </Form.Item>
 
           <Form.Item
             name="publisher"
