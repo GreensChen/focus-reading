@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Spin, Button } from 'antd';
+import { Layout, Spin, Button, Modal, message } from 'antd';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Header from '../Header/Header';
 import { supabase } from '../../supabaseClient';
@@ -31,26 +31,40 @@ const ReadingPage: React.FC = () => {
     console.log('Edit book:', bookId);
   };
 
-  const handleDelete = async () => {
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
+  const handleDelete = () => {
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDelete = async () => {
     if (!bookId) return;
 
     try {
       // 先刪除所有相關的筆記
-      await supabase
+      const { error: notesError } = await supabase
         .from('notes')
         .delete()
         .eq('book_id', bookId);
 
+      if (notesError) throw notesError;
+
       // 然後刪除書籍
-      await supabase
+      const { error: bookError } = await supabase
         .from('books')
         .delete()
         .eq('id', bookId);
 
+      if (bookError) throw bookError;
+
+      message.success('書籍已刪除');
       // 導航回書架頁面
       navigate('/');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting book:', error);
+      message.error(error?.message || '刪除失敗，請稍後再試');
+    } finally {
+      setDeleteModalVisible(false);
     }
   };
 
@@ -137,6 +151,36 @@ const ReadingPage: React.FC = () => {
 
   return (
     <Layout className="reading-page">
+      <Modal
+        title={null}
+        open={deleteModalVisible}
+        onOk={confirmDelete}
+        onCancel={() => setDeleteModalVisible(false)}
+        footer={[
+          <Button 
+            key="cancel" 
+            type="text"
+            onClick={() => setDeleteModalVisible(false)}
+            className="modal-button"
+          >
+            取消
+          </Button>,
+          <Button 
+            key="delete" 
+            type="text"
+            onClick={confirmDelete}
+            className="modal-button delete"
+          >
+            刪除
+          </Button>
+        ]}
+        className="delete-confirm-modal"
+        centered
+        closable={false}
+      >
+        <h3 className="modal-title">刪除書籍</h3>
+        <p>確定要刪除這本書籍跟所有筆記嗎？</p>
+      </Modal>
       <Content className="reading-page-content">
         <Header
           onBack={() => {
@@ -162,13 +206,11 @@ const ReadingPage: React.FC = () => {
                   {`${Math.floor((book.total_read_time || 0) / 60)}:${((book.total_read_time || 0) % 60).toString().padStart(2, '0')}`}
                 </div>
               </div>
-              <div className="book-cover">
-                {book.cover_url ? (
+              {book.cover_url && (
+                <div className="book-cover">
                   <img src={book.cover_url} alt={book.title} />
-                ) : (
-                  <span className="book-cover-placeholder">📚</span>
-                )}
-              </div>
+                </div>
+              )}
               <div className="book-info">
                 <h2 className="book-title">{book.title}</h2>
                 <p className="book-author">{book.author}</p>
