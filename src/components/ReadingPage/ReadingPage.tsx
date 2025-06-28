@@ -182,9 +182,9 @@ const ReadingPage: React.FC = () => {
           onBack={() => {
             const fromTimer = location.state && (location.state as { from: string }).from === 'timer';
             if (fromTimer) {
-              navigate('/');
+              navigate('/', { replace: true });
             } else {
-              navigate(-1);
+              navigate('/', { replace: true });
             }
           }}
           showMoreOptions

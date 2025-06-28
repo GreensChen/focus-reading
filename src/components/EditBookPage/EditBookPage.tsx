@@ -5,57 +5,92 @@ import { PlusOutlined, LeftOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import './EditBookPage.css';
 
-interface BookFormData {
-  title: string;
-  author: string;
-  publisher: string;
-  cover_file?: File;
+import { BookFormData } from '../../types/book';
+
+interface EditBookPageProps {
+  bookData?: BookFormData;
+  onSuccess?: () => void;
 }
 
-const EditBookPage: React.FC = () => {
+const EditBookPage: React.FC<EditBookPageProps> = ({ bookData, onSuccess }) => {
   const { bookId } = useParams();
   const navigate = useNavigate();
-  const [form] = Form.useForm();
+  const [form] = Form.useForm<BookFormData>();
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
-  const [previewUrl, setPreviewUrl] = useState('');
-  const [initialValues, setInitialValues] = useState<BookFormData | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [originalPreviewUrl, setOriginalPreviewUrl] = useState<string>('');
+
+  const [initialValues, setInitialValues] = useState<BookFormData>();
+
+  const [messageApi, contextHolder] = message.useMessage();
+
 
   useEffect(() => {
+    // 如果有 bookData，則使用它初始化表單
+    if (bookData) {
+      const values = {
+        title: bookData.title,
+        author: bookData.author,
+        publisher: bookData.publisher
+      };
+      setInitialValues(values);
+      form.setFieldsValue(values);
+      if (bookData.cover_url) {
+        setPreviewUrl(bookData.cover_url);
+        setOriginalPreviewUrl(bookData.cover_url);
+      } else {
+        setPreviewUrl('');
+        setOriginalPreviewUrl('');
+      }
+      setInitializing(false);
+      return;
+    }
+
+    // 如果沒有 bookId，返回首頁
     if (!bookId) {
       navigate('/');
       return;
     }
 
     const loadBookData = async () => {
-      const { data: book, error } = await supabase
-        .from('books')
-        .select('*')
-        .eq('id', bookId)
-        .single();
+      try {
+        const { data: book, error } = await supabase
+          .from('books')
+          .select('*')
+          .eq('id', bookId)
+          .single();
 
-      if (error) {
+        if (error) {
+          console.error('Error loading book:', error);
+          messageApi.error('載入書籍資料失敗');
+          navigate('/');
+          return;
+        }
+
+        if (book) {
+          const values = {
+            title: book.title,
+            author: book.author,
+            publisher: book.publisher
+          };
+          setInitialValues(values);
+          form.setFieldsValue(values);
+          const coverUrl = book.cover_url || '';
+          setPreviewUrl(coverUrl);
+          setOriginalPreviewUrl(coverUrl);
+        }
+      } catch (error) {
         console.error('Error loading book:', error);
-        message.error('載入書籍資料失敗');
+        messageApi.error('載入書籍資料失敗');
         navigate('/');
-        return;
+      } finally {
+        setInitializing(false);
       }
-
-      if (book) {
-        const values = {
-          title: book.title,
-          author: book.author,
-          publisher: book.publisher
-        };
-        form.setFieldsValue(values);
-        setInitialValues(values);
-        setPreviewUrl(book.cover_url || '');
-      }
-      setInitializing(false);
     };
 
     loadBookData();
-  }, [bookId, form, navigate]);
+  }, [bookId, bookData, form, navigate]);
 
   const handleSubmit = async (values: BookFormData) => {
     if (!bookId) return;
@@ -71,7 +106,7 @@ const EditBookPage: React.FC = () => {
           // 確保副檔名為 jpg
           const fileExt = file.name.split('.').pop()?.toLowerCase();
           if (fileExt !== 'jpg' && fileExt !== 'jpeg') {
-            message.error('只能上傳 JPG 格式的圖片');
+            messageApi.error('只能上傳 JPG 格式的圖片');
             setLoading(false);
             return;
           }
@@ -98,18 +133,18 @@ const EditBookPage: React.FC = () => {
           if (uploadError) {
             console.error('Storage upload error:', uploadError);
             if (uploadError.message.includes('storage/bucket-not-found')) {
-              message.error('儲存空間未設定，請聯繫管理員');
+              messageApi.error('儲存空間未設定，請聯繫管理員');
             } else if (uploadError.message.includes('Unauthorized')) {
-              message.error('儲存空間權限不足，請聯繫管理員');
+              messageApi.error('儲存空間權限不足，請聯繫管理員');
             } else {
-              message.error(`上傳封面失敗: ${uploadError.message}`);
+              messageApi.error(`上傳封面失敗: ${uploadError.message}`);
             }
             setLoading(false);
             return;
           }
           
           if (!uploadData) {
-            message.error('上傳封面失敗，請稍後再試');
+            messageApi.error('上傳封面失敗，請稍後再試');
             setLoading(false);
             return;
           }
@@ -122,7 +157,7 @@ const EditBookPage: React.FC = () => {
           cover_url = publicUrl;
         } catch (error: any) {
           console.error('File upload error:', error);
-          message.error('上傳封面時發生錯誤');
+          messageApi.error('上傳封面時發生錯誤');
           setLoading(false);
           return;
         }
@@ -136,47 +171,53 @@ const EditBookPage: React.FC = () => {
             title: values.title,
             author: values.author,
             publisher: values.publisher,
-            cover_url: cover_url || previewUrl
+            cover_url: values.cover_file ? cover_url : (previewUrl || null)
           })
           .eq('id', bookId);
           
         if (error) {
           console.error('Supabase error:', error);
           if (error.message.includes('security policy')) {
-            message.error('權限不足，請重新登入');
+            messageApi.error('權限不足，請重新登入');
           } else {
-            message.error(`更新失敗: ${error.message}`);
+            messageApi.error(`更新失敗: ${error.message}`);
           }
           setLoading(false);
           return;
         }
       } catch (error: any) {
         console.error('Error updating book:', error);
-        message.error('系統錯誤，請稍後再試');
+        messageApi.error('系統錯誤，請稍後再試');
         setLoading(false);
         return;
       }
       
-      message.success('更新成功');
-      navigate(`/book/${bookId}`, { replace: true });
+      messageApi.success('更新成功');
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate(`/book/${bookId}`, { replace: true });
+      }
     } catch (error: any) {
       console.error('Error updating book:', error);
-      message.error('系統錯誤，請稍後再試');
+      messageApi.error('系統錯誤，請稍後再試');
     } finally {
       setLoading(false);
     }
   };
 
-  if (initializing) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Spin size="large" />
-      </div>
-    );
-  }
+  // 清理 blob URL
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   return (
     <div className="edit-book-page">
+      {contextHolder}
       <div className="header">
         <Button
           type="text"
@@ -193,103 +234,114 @@ const EditBookPage: React.FC = () => {
         ) : (
           <Form
             form={form}
-            className="book-form"
             layout="vertical"
             onFinish={handleSubmit}
+            className="book-form"
+            initialValues={initialValues}
           >
             <Form.Item
               name="title"
               label="書名"
+              required={false}
               rules={[{ required: true, message: '請輸入書名' }]}
             >
               <Input placeholder="請輸入書名" />
             </Form.Item>
-
+            
             <Form.Item
               name="author"
               label="作者"
+              required={false}
               rules={[{ required: true, message: '請輸入作者' }]}
             >
               <Input placeholder="請輸入作者名稱" />
             </Form.Item>
-
-          <Form.Item
-            name="publisher"
-            label="出版社"
-            rules={[{ required: true, message: '請輸入出版社' }]}
-          >
-            <Input placeholder="請輸入出版社名稱" />
-          </Form.Item>
-          
-          <Form.Item
-            name="cover_file"
-            label="書籍封面"
-            valuePropName="file"
-            getValueFromEvent={(e) => e?.file?.originFileObj}
-          >
-            <div className="cover-upload">
-              <input
-                type="file"
-                accept="image/jpeg"
-                style={{ display: 'none' }}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    form.setFieldValue('cover_file', file);
-                    setPreviewUrl(URL.createObjectURL(file));
-                  }
-                }}
-                id="cover-upload-input"
-              />
-              {previewUrl ? (
-                <div className="cover-preview">
-                  <img src={previewUrl} alt="Cover preview" />
-                  <div 
-                    className="delete-button"
-                    onClick={() => {
-                      form.setFieldValue('cover_file', undefined);
-                      setPreviewUrl('');
-                      const input = document.getElementById('cover-upload-input') as HTMLInputElement;
-                      if (input) input.value = '';
-                    }}
-                  >
-                    <span style={{ fontSize: 12, color: '#fff' }}>✕</span>
+            
+            <Form.Item
+              name="publisher"
+              label="出版社"
+              required={false}
+              rules={[{ required: true, message: '請輸入出版社' }]}
+            >
+              <Input placeholder="請輸入出版社名稱" />
+            </Form.Item>
+            
+            <Form.Item
+              name="cover_file"
+              label="書籍封面"
+              valuePropName="file"
+              getValueFromEvent={(e) => e?.file?.originFileObj}
+            >
+              <div className="cover-upload">
+                <input
+                  type="file"
+                  accept="image/jpeg"
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      form.setFieldValue('cover_file', file);
+                      setPreviewUrl(URL.createObjectURL(file));
+                    }
+                  }}
+                  id="cover-upload-input"
+                />
+                {previewUrl ? (
+                  <div className="cover-preview">
+                    <img src={previewUrl} alt="Cover preview" />
+                    <div 
+                      className="delete-button"
+                      onClick={() => {
+                        form.setFieldValue('cover_file', undefined);
+                        setPreviewUrl('');
+                        const input = document.getElementById('cover-upload-input') as HTMLInputElement;
+                        if (input) input.value = '';
+                      }}
+                    >
+                      <span style={{ fontSize: 12, color: '#fff' }}>✕</span>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <label htmlFor="cover-upload-input" className="upload-button">
-                  <PlusOutlined style={{ fontSize: 24 }} />
-                </label>
-              )}
-            </div>
-          </Form.Item>
+                ) : (
+                  <label htmlFor="cover-upload-input" className="upload-button">
+                    <PlusOutlined style={{ fontSize: 24 }} />
+                  </label>
+                )}
+              </div>
+            </Form.Item>
 
-          <Form.Item shouldUpdate className="submit-button-container">
-            {() => {
-              const currentValues = form.getFieldsValue();
-              const hasChanged = initialValues && (
-                currentValues.title !== initialValues.title ||
-                currentValues.author !== initialValues.author ||
-                currentValues.publisher !== initialValues.publisher ||
-                form.getFieldValue('cover_file')
-              );
-              const isValid = currentValues.title && currentValues.author && currentValues.publisher;
+            <Form.Item shouldUpdate className="submit-button-container">
+              {() => {
+                const currentTitle = form.getFieldValue('title');
+                const currentAuthor = form.getFieldValue('author');
+                const currentPublisher = form.getFieldValue('publisher');
+                const currentCoverFile = form.getFieldValue('cover_file');
+                
+                const isValid = currentTitle && currentAuthor && currentPublisher;
+                
+                // 檢查是否有任何欄位被修改
+                const hasChanges = 
+                  currentTitle !== initialValues?.title ||
+                  currentAuthor !== initialValues?.author ||
+                  currentPublisher !== initialValues?.publisher ||
+                  currentCoverFile !== undefined ||
+                  (originalPreviewUrl && !previewUrl); // 如果原本有照片但現在被刪除了
 
-              return (
-                <Button
-                  type="primary"
-                  onClick={() => form.submit()}
-                  loading={loading}
-                  disabled={!isValid || !hasChanged}
-                  className="submit-button"
-                  block
-                >
-                  更新
-                </Button>
-              );
-            }}
-          </Form.Item>
-        </Form>
+                return (
+                  <Button
+                    type="primary"
+                    onClick={() => form.submit()}
+                    loading={loading}
+                    disabled={!isValid || !hasChanges}
+                    className="submit-button"
+                    block
+                  >
+                    更新
+                  </Button>
+                );
+              }}
+            </Form.Item>
+          </Form>
+        )}
       </div>
     </div>
   );

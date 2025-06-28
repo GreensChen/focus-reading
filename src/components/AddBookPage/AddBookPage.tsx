@@ -1,18 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Button, Form, Input, message, Spin } from 'antd';
+import { Button, Form, Input, message } from 'antd';
 import { PlusOutlined, LeftOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import './AddBookPage.css';
 
-interface BookFormData {
-  title: string;
-  author: string;
-  publisher: string;
-  cover_file?: File;
-  id?: string;
-  cover_url?: string;
-}
+import { BookFormData } from '../../types/book';
 
 interface AddBookPageProps {
   bookData?: BookFormData;
@@ -23,15 +16,30 @@ const AddBookPage: React.FC<AddBookPageProps> = ({ bookData, onSuccess }) => {
   const { bookId } = useParams();
   const navigate = useNavigate();
   const [form] = Form.useForm();
-  const [initializing, setInitializing] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
 
   useEffect(() => {
+    // 如果有 bookData，則使用它初始化表單
+    if (bookData) {
+      form.setFieldsValue({
+        title: bookData.title,
+        author: bookData.author,
+        publisher: bookData.publisher
+      });
+      if (bookData.cover_url) {
+        setPreviewUrl(bookData.cover_url);
+      }
+      return;
+    }
+
+    // 如果有 bookId，則從服務器加載數據
     if (!bookId) {
-      setInitializing(false);
       return;
     }
 
     const loadBookData = async () => {
+      try {
         const { data: book, error } = await supabase
           .from('books')
           .select('*')
@@ -53,22 +61,15 @@ const AddBookPage: React.FC<AddBookPageProps> = ({ bookData, onSuccess }) => {
           });
           setPreviewUrl(book.cover_url || '');
         }
-      setInitializing(false);
+      } catch (error) {
+        console.error('Error loading book:', error);
+        message.error('載入書籍資料失敗');
+        navigate('/');
+      }
     };
 
     loadBookData();
-  }, [bookId, form, navigate]);
-
-  if (initializing) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Spin size="large" />
-      </div>
-    );
-  }
-
-  const [loading, setLoading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string>('');
+  }, [bookId, bookData, form, navigate]);
 
   const handleSubmit = async (values: BookFormData) => {
     try {

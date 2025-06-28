@@ -34,16 +34,18 @@ const App: React.FC = () => {
           top: 24
         }}
       >
+        <div className="app-container">
         <BrowserRouter>
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<Bookshelf />} />
             <Route path="/book/:bookId" element={<ReadingPage />} />
-            <Route path="/book/:bookId/edit" element={<EditBookPage />} />
+            <Route path="/book/:bookId/edit" element={<EditBookPage bookData={undefined} />} />
             <Route path="/timer/:bookId/:minutes" element={<TimerNotePage />} />
             <Route path="/add-book" element={<AddBookPage />} />
           </Routes>
         </BrowserRouter>
+        </div>
       </AntApp>
     </ConfigProvider>
   );

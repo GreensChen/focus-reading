@@ -42,12 +42,14 @@ const Bookshelf: React.FC = () => {
               >
                 <div className="book-preview">
                   <div className="book-cover-container">
-                    {book.cover_url && (
+                    {book.cover_url ? (
                       <img
                         src={book.cover_url}
                         alt={book.title}
                         className="book-cover"
                       />
+                    ) : (
+                      <div className="book-cover-placeholder" />
                     )}
                   </div>
                   <div className="book-details">
