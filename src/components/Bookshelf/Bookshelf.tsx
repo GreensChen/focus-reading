@@ -1,16 +1,19 @@
 import React from 'react';
-import { Layout, Card, Avatar, Empty, FloatButton, Spin } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Layout, Card, Avatar, Empty, FloatButton, Spin, Dropdown } from 'antd';
+import { PlusOutlined, LogoutOutlined } from '@ant-design/icons';
 
 import { useNavigate } from 'react-router-dom';
 import './Bookshelf.css';
 import { useBooks } from '../../hooks/useBooks';
+import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../supabaseClient';
 
 const { Header, Content } = Layout;
 
 const Bookshelf: React.FC = () => {
   const navigate = useNavigate();
   const { books, loading } = useBooks();
+  const { user } = useAuth();
 
 
 
@@ -21,7 +24,23 @@ const Bookshelf: React.FC = () => {
           <h2>Focus on Reading</h2>
         </div>
         <div className="header-right">
-          <Avatar className="profile-avatar" size={32}>C</Avatar>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'logout',
+                  icon: <LogoutOutlined />,
+                  label: '登出',
+                  onClick: () => supabase.auth.signOut()
+                }
+              ]
+            }}
+            placement="bottomRight"
+          >
+            <Avatar className="profile-avatar" size={32}>
+              {user?.email?.[0].toUpperCase()}
+            </Avatar>
+          </Dropdown>
         </div>
       </Header>
       <Content className="content">

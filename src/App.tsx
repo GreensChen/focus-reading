@@ -1,12 +1,16 @@
 import React, { useEffect } from 'react';
 import { ConfigProvider } from 'antd';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { App as AntApp } from 'antd';
 import Bookshelf from './components/Bookshelf/Bookshelf';
 import ReadingPage from './components/ReadingPage/ReadingPage';
 import TimerNotePage from './components/TimerNotePage/TimerNotePage';
 import AddBookPage from './components/AddBookPage/AddBookPage';
 import EditBookPage from './components/EditBookPage/EditBookPage';
+import LoginPage from './components/LoginPage/LoginPage';
+import CreateAccountPage from './components/CreateAccountPage/CreateAccountPage';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const ScrollToTop = () => {
   const location = useLocation();
@@ -36,14 +40,39 @@ const App: React.FC = () => {
       >
         <div className="app-container">
         <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
-            <Route path="/" element={<Bookshelf />} />
-            <Route path="/book/:bookId" element={<ReadingPage />} />
-            <Route path="/book/:bookId/edit" element={<EditBookPage bookData={undefined} />} />
-            <Route path="/timer/:bookId/:minutes" element={<TimerNotePage />} />
-            <Route path="/add-book" element={<AddBookPage />} />
-          </Routes>
+          <AuthProvider>
+            <ScrollToTop />
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/create-account" element={<CreateAccountPage />} />
+              <Route path="/" element={
+                <ProtectedRoute>
+                  <Bookshelf />
+                </ProtectedRoute>
+              } />
+              <Route path="/book/:bookId" element={
+                <ProtectedRoute>
+                  <ReadingPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/book/:bookId/edit" element={
+                <ProtectedRoute>
+                  <EditBookPage bookData={undefined} />
+                </ProtectedRoute>
+              } />
+              <Route path="/timer/:bookId/:minutes" element={
+                <ProtectedRoute>
+                  <TimerNotePage />
+                </ProtectedRoute>
+              } />
+              <Route path="/add-book" element={
+                <ProtectedRoute>
+                  <AddBookPage />
+                </ProtectedRoute>
+              } />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </AuthProvider>
         </BrowserRouter>
         </div>
       </AntApp>

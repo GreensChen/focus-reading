@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button, Form, Input, message } from 'antd';
 import { PlusOutlined, LeftOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
+import { useAuth } from '../../hooks/useAuth';
 import './AddBookPage.css';
 
 import { BookFormData } from '../../types/book';
@@ -13,6 +14,8 @@ interface AddBookPageProps {
 }
 
 const AddBookPage: React.FC<AddBookPageProps> = ({ bookData, onSuccess }) => {
+
+  const { user } = useAuth();
   const { bookId } = useParams();
   const navigate = useNavigate();
   const [form] = Form.useForm();
@@ -149,8 +152,8 @@ const AddBookPage: React.FC<AddBookPageProps> = ({ bookData, onSuccess }) => {
                 title: values.title,
                 author: values.author,
                 publisher: values.publisher,
-                cover_url: cover_url || bookData.cover_url,
-                updated_at: new Date().toISOString()
+                cover_url: cover_url || bookData?.cover_url,
+                user_id: user?.id
               })
               .eq('id', bookData.id)
           : supabase
@@ -161,9 +164,10 @@ const AddBookPage: React.FC<AddBookPageProps> = ({ bookData, onSuccess }) => {
                 publisher: values.publisher,
                 cover_url,
                 total_read_time: 0,
-                created_at: new Date().toISOString()
-              }
-              ])
+                created_at: new Date().toISOString(),
+                user_id: user?.id
+              }])
+
               .select();
           
         const { error, data } = await query;

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import type { Database } from '../lib/database.types';
+import { useAuth } from './useAuth';
 
 type Book = Database['public']['Tables']['books']['Row'];
 
 export const useBooks = () => {
+  const { user } = useAuth();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +22,7 @@ export const useBooks = () => {
           *,
           notes_count:notes(count)
         `)
+        .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
       console.log('Supabase response:', { data, error });
@@ -44,83 +47,13 @@ export const useBooks = () => {
     }
   };
 
-  // 測試用的新增書籍功能
-  const addTestBooks = async () => {
-    const testBooks = [
-      {
-        title: '深入淵出設計模式',
-        author: 'Eric Freeman',
-        publisher: 'O\'Reilly',
-        cover_url: null
-      },
-      {
-        title: '重構：改善既有程式的設計',
-        author: 'Martin Fowler',
-        publisher: 'Addison-Wesley',
-        cover_url: null
-      },
-      {
-        title: '無瑕的程式碼',
-        author: 'Robert C. Martin',
-        publisher: 'Prentice Hall',
-        cover_url: null
-      }
-    ];
 
-    try {
-      for (const book of testBooks) {
-        await addBook(book);
-      }
-      console.log('Test books added successfully');
-    } catch (err) {
-      console.error('Error adding test books:', err);
-    }
-  };
 
-  // 在組件掛載時獲取資料
   useEffect(() => {
-    const initializeBooks = async () => {
-      console.log('Initializing books...');
-      
-      try {
-        // 先檢查資料表是否存在
-        const { data: tables, error: tablesError } = await supabase
-          .from('books')
-          .select('id')
-          .limit(1);
-
-        console.log('Tables check:', { tables, error: tablesError });
-
-        if (tablesError) {
-          console.error('Error checking tables:', tablesError);
-          return;
-        }
-
-        // 獲取書籍資料
-        await fetchBooks();
-
-        // 檢查是否需要新增測試資料
-        const { data: existingBooks, error: countError } = await supabase
-          .from('books')
-          .select('id');
-
-        console.log('Existing books check:', {
-          count: existingBooks?.length,
-          error: countError
-        });
-
-        if (!existingBooks || existingBooks.length === 0) {
-          console.log('No books found, adding test data...');
-          await addTestBooks();
-          await fetchBooks();
-        }
-      } catch (err) {
-        console.error('Error in initializeBooks:', err);
-      }
-    };
-
-    initializeBooks();
-  }, []);
+    if (user) {
+      fetchBooks();
+    }
+  }, [user]);
 
   // 新增書籍
   const addBook = async (bookData: Omit<Book, 'id' | 'created_at' | 'total_read_time' | 'notes_count'>) => {
@@ -187,10 +120,7 @@ export const useBooks = () => {
     }
   };
 
-  // 初始載入
-  useEffect(() => {
-    fetchBooks();
-  }, []);
+
 
   return {
     books,
